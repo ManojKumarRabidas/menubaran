@@ -73,7 +73,7 @@ export const PaymentDesk = ({ orders = [], onToast, onOrdersChange }) => {
                   <p className="text-xs text-gray-500 font-mono">{order.id.substring(0, 12)}…</p>
                   <div className="mt-2 space-y-0.5">
                     {order.items.map((item, i) => (
-                      <p key={i} className="text-sm text-gray-600">• {item.name} × {item.qty} — ${(item.price * item.qty).toFixed(2)}</p>
+                      <p key={i} className="text-sm text-gray-600">• {item.name} × {item.qty} — ₹{(item.price * item.qty).toFixed(2)}</p>
                     ))}
                   </div>
                   {order.specialInstructions && (
@@ -81,7 +81,7 @@ export const PaymentDesk = ({ orders = [], onToast, onOrdersChange }) => {
                   )}
                 </div>
                 <div className="text-right flex-shrink-0 ml-4">
-                  <p className="text-2xl font-extrabold text-indigo-600">${order.totalAmount.toFixed(2)}</p>
+                  <p className="text-2xl font-extrabold text-indigo-600">₹{order.totalAmount.toFixed(2)}</p>
                   <p className="text-xs text-gray-500 mb-3">{new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                   <button
                     onClick={() => openPayment(order)}
@@ -99,7 +99,7 @@ export const PaymentDesk = ({ orders = [], onToast, onOrdersChange }) => {
         {/* Revenue Summary */}
         <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl shadow-md p-5 text-white">
           <p className="text-indigo-200 text-sm font-semibold mb-1">Today's Collected</p>
-          <p className="text-4xl font-extrabold">${totalPaidToday.toFixed(2)}</p>
+          <p className="text-4xl font-extrabold">₹{totalPaidToday.toFixed(2)}</p>
           <p className="text-indigo-300 text-xs mt-2">{paidOrders.length} payments processed</p>
         </div>
 
@@ -114,10 +114,10 @@ export const PaymentDesk = ({ orders = [], onToast, onOrdersChange }) => {
                 <div key={order.id} className="flex items-center justify-between p-2.5 bg-emerald-50 rounded-xl">
                   <div>
                     <p className="text-sm font-bold text-gray-900">Table {order.tableNumber}</p>
-                    <p className="text-xs text-gray-500 capitalize">{order.paymentMethod || 'cash'} {order.tipAmount > 0 ? `• +$${order.tipAmount?.toFixed(2)} tip` : ''}</p>
+                    <p className="text-xs text-gray-500 capitalize">₹{order.paymentMethod || 'cash'} {order.tipAmount > 0 ? `• +₹${order.tipAmount?.toFixed(2)} tip` : ''}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-extrabold text-emerald-700">${(order.totalAmount + (order.tipAmount || 0)).toFixed(2)}</p>
+                    <p className="text-sm font-extrabold text-emerald-700">₹{(order.totalAmount + (order.tipAmount || 0)).toFixed(2)}</p>
                     <p className="text-xs text-gray-400">{order.paidAt ? new Date(order.paidAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}</p>
                   </div>
                 </div>
@@ -145,12 +145,12 @@ export const PaymentDesk = ({ orders = [], onToast, onOrdersChange }) => {
                   {selectedOrder.items.map((item, i) => (
                     <div key={i} className="flex justify-between text-sm">
                       <span className="text-gray-700">{item.name} × {item.qty}</span>
-                      <span className="font-semibold">${(item.price * item.qty).toFixed(2)}</span>
+                      <span className="font-semibold">₹{(item.price * item.qty).toFixed(2)}</span>
                     </div>
                   ))}
                   <div className="border-t border-gray-200 mt-2 pt-2 flex justify-between font-extrabold">
                     <span>Subtotal</span>
-                    <span className="text-indigo-600">${selectedOrder.totalAmount.toFixed(2)}</span>
+                    <span className="text-indigo-600">₹{selectedOrder.totalAmount.toFixed(2)}</span>
                   </div>
                 </div>
               </div>
@@ -196,7 +196,7 @@ export const PaymentDesk = ({ orders = [], onToast, onOrdersChange }) => {
               <div className="bg-indigo-50 rounded-xl p-4 flex justify-between items-center">
                 <span className="font-bold text-gray-700">Total Due</span>
                 <span className="text-2xl font-extrabold text-indigo-700">
-                  ${(selectedOrder.totalAmount + (parseFloat(tip) || 0)).toFixed(2)}
+                  ₹{(selectedOrder.totalAmount + (parseFloat(tip) || 0)).toFixed(2)}
                 </span>
               </div>
 

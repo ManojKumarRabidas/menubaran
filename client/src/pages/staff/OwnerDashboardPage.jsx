@@ -295,6 +295,7 @@ export default function OwnerDashboardPage() {
               <MenuEditor
                 items={menuItems}
                 categories={categories}
+                restaurantId={user?.restaurantId}
                 onToast={showToast}
                 onItemsChange={setMenuItems}
               />

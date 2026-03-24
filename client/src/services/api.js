@@ -248,6 +248,37 @@ export const updateMenuItem = async (itemId, updates) => {
 };
 
 /**
+ * Adds a new menu item
+ * @param {object} payload - { restaurantId, categoryId, name, price, emoji, description, isAvailable }
+ */
+export const addMenuItem = async (payload) => {
+  const GRADIENTS = [
+    ['from-orange-100', 'to-orange-200'],
+    ['from-rose-100', 'to-rose-200'],
+    ['from-emerald-100', 'to-emerald-200'],
+    ['from-sky-100', 'to-sky-200'],
+    ['from-purple-100', 'to-purple-200'],
+    ['from-amber-100', 'to-amber-200'],
+  ];
+  const g = GRADIENTS[Math.floor(Math.random() * GRADIENTS.length)];
+  const newItem = {
+    id: `item_${Date.now()}`,
+    restaurantId: payload.restaurantId,
+    categoryId: payload.categoryId,
+    name: payload.name,
+    price: parseFloat(payload.price),
+    emoji: payload.emoji || '🍽️',
+    description: payload.description || '',
+    isAvailable: payload.isAvailable !== false,
+    gradientFrom: g[0],
+    gradientTo: g[1],
+    orderCount: 0,
+  };
+  menuItems.push(newItem);
+  return Promise.resolve({ data: newItem });
+};
+
+/**
  * Updates a table's fields (number/name, status)
  * @param {string} tableId
  * @param {object} updates

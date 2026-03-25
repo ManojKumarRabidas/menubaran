@@ -15,18 +15,18 @@ import { useAuth } from '../../hooks/useAuth.js';
 import {
   getOwnerStats, getMenuByRestaurant, getCategoriesByRestaurant,
   getTablesByRestaurant, getOrdersByRestaurant, getWeeklyRevenue,
-  updateMenuItemPrice
+  updateMenuItemPrice, getRestaurantById
 } from '../../services/api.js';
 import { restaurants, menuCategories } from '../../data/data.js';
 
 const NAV_ITEMS = [
-  { id: 'overview',  icon: '📊', label: 'Overview' },
-  { id: 'menu',      icon: '🍽️', label: 'Menu Editor' },
-  { id: 'tables',    icon: '🪑', label: 'Tables' },
-  { id: 'orders',    icon: '📋', label: 'Orders' },
-  { id: 'payments',  icon: '💳', label: 'Payments' },
-  { id: 'account',   icon: '👤', label: 'Account' },
-  { id: 'settings',  icon: '⚙️', label: 'Settings' },
+  { id: 'overview', icon: '📊', label: 'Overview' },
+  { id: 'menu', icon: '🍽️', label: 'Menu Editor' },
+  { id: 'tables', icon: '🪑', label: 'Tables' },
+  { id: 'orders', icon: '📋', label: 'Orders' },
+  { id: 'payments', icon: '💳', label: 'Payments' },
+  { id: 'account', icon: '👤', label: 'Account' },
+  { id: 'settings', icon: '⚙️', label: 'Settings' },
 ];
 
 export default function OwnerDashboardPage() {
@@ -41,43 +41,72 @@ export default function OwnerDashboardPage() {
   const [tables, setTables] = useState([]);
   const [orders, setOrders] = useState([]);
   const [weeklyRevenue, setWeeklyRevenue] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const [toast, setToast] = useState({ msg: '', type: '' });
-
-  const restaurant = restaurants.find(r => r.id === user?.restaurantId);
+  const [restaurant, setRestaurant] = useState(null);
 
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type });
     setTimeout(() => setToast({ msg: '', type: '' }), 3500);
   };
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const [statsRes, menuRes, catRes, tablesRes, ordersRes, weekRes] = await Promise.all([
-          getOwnerStats(user?.restaurantId),
-          getMenuByRestaurant(restaurant?.slug),
-          getCategoriesByRestaurant(restaurant?.slug),
-          getTablesByRestaurant(user?.restaurantId),
-          getOrdersByRestaurant(user?.restaurantId),
-          getWeeklyRevenue(user?.restaurantId),
-        ]);
 
-        setStats(statsRes.data);
-        setMenuItems(menuRes.data);
-        setCategories(catRes.data);
-        setTables(tablesRes.data);
-        setOrders(ordersRes.data);
-        setWeeklyRevenue(weekRes.data);
-      } catch (e) {
-        showToast('Failed to load dashboard data', 'error');
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (user?.restaurantId) load();
-  }, [user?.restaurantId, restaurant?.slug]);
+  const load = async () => {
+    try {
+      console.log('[Debug] user?.restaurantId:', user?.restaurantId);
+      console.log('[Debug] restaurant?.slug:', restaurant?.slug);
+
+      const [statsRes, menuRes, catRes, tablesRes, ordersRes, weekRes] = await Promise.all([
+        getOwnerStats(user?.restaurantId).catch(e => { console.error('[FAIL] getOwnerStats:', e); return null; }),
+        getMenuByRestaurant(restaurant?.slug).catch(e => { console.error('[FAIL] getMenuByRestaurant:', e); return null; }),
+        getCategoriesByRestaurant(restaurant?.slug).catch(e => { console.error('[FAIL] getCategoriesByRestaurant:', e); return null; }),
+        getTablesByRestaurant(user?.restaurantId).catch(e => { console.error('[FAIL] getTablesByRestaurant:', e); return null; }),
+        getOrdersByRestaurant(user?.restaurantId).catch(e => { console.error('[FAIL] getOrdersByRestaurant:', e); return null; }),
+        getWeeklyRevenue(user?.restaurantId).catch(e => { console.error('[FAIL] getWeeklyRevenue:', e); return null; }),
+      ]);
+
+      console.log('[Debug] responses:', { statsRes, menuRes, catRes, tablesRes, ordersRes, weekRes });
+
+      // Only set state if response is not null
+      if (statsRes) setStats(statsRes.data);
+      if (menuRes) setMenuItems(menuRes.data);
+      if (catRes) setCategories(catRes.data);
+      if (tablesRes) setTables(tablesRes.data);
+      if (ordersRes) setOrders(ordersRes.data);
+      if (weekRes) setWeeklyRevenue(weekRes.data);
+
+    } catch (e) {
+      console.error('[Debug] Outer catch:', e);
+      showToast('Failed to load dashboard data', 'error');
+    } finally {
+      setLoading(false); // Now ALWAYS fires even if a call fails
+    }
+  };
+
+  const fetchRestaurant = async () => {
+    let getRestaurant = await getRestaurantById(user?.restaurantId)?.data || null;
+    if (getRestaurant) {
+      setRestaurant(getRestaurant);
+      console.log('[Debug] Fetched restaurant:', getRestaurant);
+    } else {
+      console.warn('[Debug] No restaurant found for ID:', user?.restaurantId);
+    }
+  };
+  useEffect(() => {
+    fetchRestaurant();
+    console.log('[Effect] Fired');
+    console.log('[Effect] user:', user);
+    console.log('[Effect] restaurant:', restaurant);
+    console.log('[Effect] restaurantId:', user?.restaurantId);
+    console.log('[Effect] slug:', restaurant?.slug);
+    if (user?.restaurantId && restaurant?.slug) {
+      console.log('[Effect] Condition passed — calling load()');
+      load();
+    } else {
+      console.log('[Effect] Condition FAILED — load() skipped');
+    }
+  }, [user?.restaurantId, user]);
 
   // Donut chart: revenue segments by category
   const donutSegments = (() => {
@@ -141,9 +170,8 @@ export default function OwnerDashboardPage() {
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group relative ${
-                    isActive ? 'bg-indigo-600 shadow-md' : 'hover:bg-gray-700'
-                  }`}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group relative ${isActive ? 'bg-indigo-600 shadow-md' : 'hover:bg-gray-700'
+                    }`}
                 >
                   <span className="text-xl flex-shrink-0">{item.icon}</span>
                   {sidebarOpen && <span className={`text-sm font-semibold transition ${isActive ? 'text-white' : 'text-gray-300 group-hover:text-white'}`}>{item.label}</span>}

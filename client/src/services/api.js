@@ -1,3 +1,4 @@
+const API_URL = import.meta.env.VITE_API_URL || "/api"
 import {
   restaurants,
   menuCategories,
@@ -24,8 +25,19 @@ export const getRestaurantBySlug = async (slug) => {
  * @returns {Promise<{data: object}>}
  */
 export const getRestaurantById = async (id) => {
-  const restaurant = restaurants.find(r => r.id === id);
-  return Promise.resolve({ data: restaurant });
+  try {
+    if (!id) {
+      return Promise.resolve({ data: null });
+    }
+    const responce = await fetch(`${API_URL}/api/restaurants/${id}`, { method: 'GET' }).then(res => res.json());
+    if (responce.success) {
+      console.log("responce restaurant", responce)
+      return Promise.resolve({ data: responce.doc });
+    }
+    return Promise.resolve({ data: null });
+  } catch (e) {
+    return Promise.resolve({ data: null });
+  }
 };
 
 /**
@@ -195,32 +207,63 @@ export const getOrdersByRestaurant = async (restaurantId) => {
  * @returns {Promise<{data: {token: string, staff: object}}>}
  */
 export const staffLogin = async (email, password) => {
-  const user = staff.find(s => s.email === email && s.password === password);
-  if (!user) {
-    return Promise.reject({ error: 'Invalid credentials' });
+  const response = await fetch(`${API_URL}/api/staff/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password })
+  }).then(res => res.json()
+  )
+  if (response) {
+    const result = response
+    console.log("result staff", result)
+    if (!response.success) {
+      return Promise.reject({ error: 'Invalid credentials' });
+    }
+    // Create mock JWT: base64-encoded JSON payload
+    const payload = {
+      id: result.doc.staff.id,
+      name: result.doc.staff.name,
+      role: result.doc.staff.role,
+      restaurantId: result.doc.staff.restaurantId,
+      exp: Date.now() + 24 * 60 * 60 * 1000 // 24 hours
+    };
+    const token = btoa(JSON.stringify(payload));
+
+    return Promise.resolve({
+      data: {
+        token,
+        staff: {
+          id: result.doc.staff.id,
+          name: result.doc.staff.name,
+          role: result.doc.staff.role,
+          restaurantId: result.doc.staff.restaurantId
+        }
+      }
+    });
   }
+  return Promise.reject({ error: 'Invalid credentials' });
 
   // Create mock JWT: base64-encoded JSON payload
-  const payload = {
-    id: user.id,
-    name: user.name,
-    role: user.role,
-    restaurantId: user.restaurantId,
-    exp: Date.now() + 24 * 60 * 60 * 1000 // 24 hours
-  };
-  const token = btoa(JSON.stringify(payload));
+  // const payload = {
+  //   id: user.id,
+  //   name: user.name,
+  //   role: user.role,
+  //   restaurantId: user.restaurantId,
+  //   exp: Date.now() + 24 * 60 * 60 * 1000 // 24 hours
+  // };
+  // const token = btoa(JSON.stringify(payload));
 
-  return Promise.resolve({
-    data: {
-      token,
-      staff: {
-        id: user.id,
-        name: user.name,
-        role: user.role,
-        restaurantId: user.restaurantId
-      }
-    }
-  });
+  // return Promise.resolve({
+  //   data: {
+  //     token,
+  //     staff: {
+  //       id: user.id,
+  //       name: user.name,
+  //       role: user.role,
+  //       restaurantId: user.restaurantId
+  //     }
+  //   }
+  // });
 };
 
 /**
@@ -231,33 +274,38 @@ export const staffLogin = async (email, password) => {
  */
 
 export const adminLogin = async (email, password) => {
-  console.log('Attempting admin login with:', email, password);
-  console.log("testing")
-  console.log('Available admins:', admin);
-  const user = admin.find(s => s.email === email && s.password === password);
-  if (!user) {
-    return Promise.reject({ error: 'Invalid credentials' });
+  const response = await fetch(`${API_URL}/api/admin/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password })
+  }).then(res => res.json()
+  )
+  if (response) {
+    const result = response
+    if (!response.success) {
+      return Promise.reject({ error: 'Invalid credentials' });
+    }
+    // Create mock JWT: base64-encoded JSON payload
+    const payload = {
+      id: result.doc.id,
+      name: result.doc.name,
+      role: result.doc.role,
+      exp: Date.now() + 24 * 60 * 60 * 1000 // 24 hours
+    };
+    const token = btoa(JSON.stringify(payload));
+
+    return Promise.resolve({
+      data: {
+        token,
+        staff: {
+          id: result.doc.id,
+          name: result.doc.name,
+          role: result.doc.role
+        }
+      }
+    });
   }
 
-  // Create mock JWT: base64-encoded JSON payload
-  const payload = {
-    id: user.id,
-    name: user.name,
-    role: user.role,
-    exp: Date.now() + 24 * 60 * 60 * 1000 // 24 hours
-  };
-  const token = btoa(JSON.stringify(payload));
-
-  return Promise.resolve({
-    data: {
-      token,
-      staff: {
-        id: user.id,
-        name: user.name,
-        role: user.role
-      }
-    }
-  });
 }
 
 /**

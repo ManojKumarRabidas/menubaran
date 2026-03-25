@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { updateTable, addTable } from '../../services/api.js';
 
 const STATUS_STYLES = {
@@ -9,9 +10,10 @@ const STATUS_STYLES = {
 };
 
 /**
- * Tables Manager — visual grid with status, rename, add table, order summary
+ * Tables Manager — visual grid with status, rename, add table, QR generation
  */
 export const TablesManager = ({ tables = [], orders = [], restaurantId, onToast, onTablesChange }) => {
+  const navigate = useNavigate();
   const [editingId, setEditingId] = useState(null);
   const [editNumber, setEditNumber] = useState('');
   const [expandedId, setExpandedId] = useState(null);
@@ -47,6 +49,12 @@ export const TablesManager = ({ tables = [], orders = [], restaurantId, onToast,
     setAddingTable(false); setNewTableNumber('');
   };
 
+  const handleGenerateQR = (e, table) => {
+    e.stopPropagation();
+    // Navigate to printable QR page; restaurantId comes from parent prop
+    navigate(`/qr/${restaurantId}/${table.id}`);
+  };
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -56,9 +64,8 @@ export const TablesManager = ({ tables = [], orders = [], restaurantId, onToast,
           <p className="text-sm text-gray-500">{tables.length} tables total</p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          {/* Legend */}
           {Object.entries(STATUS_STYLES).map(([key, val]) => (
-            <span key={key} className={`text-xs font-semibold px-2 py-1 rounded-full  flex items-center justify-center ${val.badge}`}>{val.icon} {val.label}</span>
+            <span key={key} className={`text-xs font-semibold px-2 py-1 rounded-full flex items-center justify-center ${val.badge}`}>{val.icon} {val.label}</span>
           ))}
           <button
             onClick={() => setAddingTable(true)}
@@ -127,16 +134,27 @@ export const TablesManager = ({ tables = [], orders = [], restaurantId, onToast,
                       {order.items.map((item, i) => (
                         <p key={i} className="text-xs text-gray-600">• {item.name} × {item.qty}</p>
                       ))}
-                      <p className="text-xs font-bold text-indigo-600">Total: ${order.totalAmount.toFixed(2)}</p>
+                      <p className="text-xs font-bold text-indigo-600">Total: ₹{order.totalAmount.toFixed(0)}</p>
                     </>
                   ) : (
                     <p className="text-xs text-gray-500 text-center">No active order</p>
                   )}
-                  <div className="flex gap-1 pt-1">
-                    <button onClick={() => startEdit(table)} className="flex-1 py-1 bg-amber-100 text-amber-700 rounded-lg text-xs font-bold hover:bg-amber-200 transition">✏️ Rename</button>
-                    {table.status !== 'free' && (
-                      <button onClick={() => freeTable(table)} className="flex-1 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-xs font-bold hover:bg-emerald-200 transition">Free</button>
-                    )}
+
+                  {/* Action buttons */}
+                  <div className="flex gap-1 pt-1 flex-col">
+                    {/* QR Code Button */}
+                    <button
+                      onClick={(e) => handleGenerateQR(e, table)}
+                      className="w-full py-1.5 bg-amber-600 text-white rounded-lg text-xs font-bold hover:bg-amber-700 transition flex items-center justify-center gap-1"
+                    >
+                      📱 Generate QR Code
+                    </button>
+                    <div className="flex gap-1">
+                      <button onClick={() => startEdit(table)} className="flex-1 py-1 bg-amber-100 text-amber-700 rounded-lg text-xs font-bold hover:bg-amber-200 transition">✏️ Rename</button>
+                      {table.status !== 'free' && (
+                        <button onClick={() => freeTable(table)} className="flex-1 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-xs font-bold hover:bg-emerald-200 transition">✓ Free</button>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}

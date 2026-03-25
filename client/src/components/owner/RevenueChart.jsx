@@ -31,7 +31,7 @@ export const RevenueChart = ({ data = [] }) => {
         {data.map((item, idx) => {
           const heightPct = (item.revenue / maxRevenue) * 100;
           return (
-            <div key={item.day} className="flex-1 flex flex-col items-center gap-1 group">
+            <div key={item.day} className="flex-1 flex flex-col items-center gap-1 group" style={{ maxWidth: '6rem' }}>
               {/* Tooltip */}
               <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-xs rounded-lg px-2 py-1 whitespace-nowrap pointer-events-none mb-1">
                 ${item.revenue} • {item.orders} orders

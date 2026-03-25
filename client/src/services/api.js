@@ -4,7 +4,8 @@ import {
   menuItems,
   tables,
   orders,
-  staff
+  staff,
+  admin
 } from '../data/data.js';
 
 /**
@@ -18,7 +19,51 @@ export const getRestaurantBySlug = async (slug) => {
 };
 
 /**
- * Retrieves all menu items for a restaurant
+ * Retrieves a restaurant by its database ID
+ * @param {string} id - The restaurant ID (e.g. 'rest_1')
+ * @returns {Promise<{data: object}>}
+ */
+export const getRestaurantById = async (id) => {
+  const restaurant = restaurants.find(r => r.id === id);
+  return Promise.resolve({ data: restaurant });
+};
+
+/**
+ * Retrieves a table by its database ID
+ * @param {string} id - The table ID (e.g. 'table_1')
+ * @returns {Promise<{data: object}>}
+ */
+export const getTableById = async (id) => {
+  const table = tables.find(t => t.id === id);
+  return Promise.resolve({ data: table });
+};
+
+/**
+ * Retrieves all menu items for a restaurant by restaurant ID
+ * @param {string} restaurantId - The restaurant ID
+ * @returns {Promise<{data: array}>}
+ */
+export const getMenuByRestaurantId = async (restaurantId) => {
+  return Promise.resolve({
+    data: menuItems.filter(i => i.restaurantId === restaurantId)
+  });
+};
+
+/**
+ * Retrieves all menu categories for a restaurant by restaurant ID
+ * @param {string} restaurantId - The restaurant ID
+ * @returns {Promise<{data: array}>}
+ */
+export const getCategoriesByRestaurantId = async (restaurantId) => {
+  return Promise.resolve({
+    data: menuCategories
+      .filter(c => c.restaurantId === restaurantId)
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+  });
+};
+
+/**
+ * Retrieves all menu items for a restaurant (slug-based, kept for staff pages)
  * @param {string} restaurantSlug - The restaurant slug
  * @returns {Promise<{data: array}>}
  */
@@ -31,7 +76,7 @@ export const getMenuByRestaurant = async (restaurantSlug) => {
 };
 
 /**
- * Retrieves all menu categories for a restaurant
+ * Retrieves all menu categories for a restaurant (slug-based, kept for staff pages)
  * @param {string} restaurantSlug - The restaurant slug
  * @returns {Promise<{data: array}>}
  */
@@ -52,11 +97,14 @@ export const getCategoriesByRestaurant = async (restaurantSlug) => {
  */
 export const placeOrder = async (orderPayload) => {
   const { restaurantSlug, tableId, items, specialInstructions } = orderPayload;
-  const restaurant = restaurants.find(r => r.slug === restaurantSlug);
+  // Support both real restaurant ID (e.g. 'rest_1') and slug (e.g. 'spice-garden')
+  const restaurant =
+    restaurants.find(r => r.id === restaurantSlug) ||
+    restaurants.find(r => r.slug === restaurantSlug);
   const table = tables.find(t => t.id === tableId);
-  
+
   if (!restaurant || !table) return Promise.resolve({ data: null });
-  
+
   const totalAmount = items.reduce((sum, item) => sum + item.price * item.qty, 0);
   const newOrder = {
     id: `order_${Date.now()}`,
@@ -70,11 +118,11 @@ export const placeOrder = async (orderPayload) => {
     createdAt: new Date(),
     totalAmount
   };
-  
+
   orders.push(newOrder);
   table.status = 'occupied';
   table.currentOrderId = newOrder.id;
-  
+
   return Promise.resolve({ data: newOrder });
 };
 
@@ -97,10 +145,10 @@ export const getOrderById = async (orderId) => {
 export const updateOrderStatus = async (orderId, newStatus) => {
   const order = orders.find(o => o.id === orderId);
   if (!order) return Promise.resolve({ data: null });
-  
+
   order.status = newStatus;
   order.statusHistory.push({ status: newStatus, timestamp: new Date() });
-  
+
   return Promise.resolve({ data: order });
 };
 
@@ -124,7 +172,7 @@ export const getTablesByRestaurant = async (restaurantId) => {
 export const updateTableStatus = async (tableId, status) => {
   const table = tables.find(t => t.id === tableId);
   if (!table) return Promise.resolve({ data: null });
-  
+
   table.status = status;
   return Promise.resolve({ data: table });
 };
@@ -151,7 +199,7 @@ export const staffLogin = async (email, password) => {
   if (!user) {
     return Promise.reject({ error: 'Invalid credentials' });
   }
-  
+
   // Create mock JWT: base64-encoded JSON payload
   const payload = {
     id: user.id,
@@ -161,7 +209,7 @@ export const staffLogin = async (email, password) => {
     exp: Date.now() + 24 * 60 * 60 * 1000 // 24 hours
   };
   const token = btoa(JSON.stringify(payload));
-  
+
   return Promise.resolve({
     data: {
       token,
@@ -176,6 +224,43 @@ export const staffLogin = async (email, password) => {
 };
 
 /**
+ * Authenticates admin and returns a mock JWT token
+ * @param {string} email - Admin email
+ * @param {string} password - Admin password
+ * @returns {Promise<{data: {token: string, admin: object}}>}
+ */
+
+export const adminLogin = async (email, password) => {
+  console.log('Attempting admin login with:', email, password);
+  console.log("testing")
+  console.log('Available admins:', admin);
+  const user = admin.find(s => s.email === email && s.password === password);
+  if (!user) {
+    return Promise.reject({ error: 'Invalid credentials' });
+  }
+
+  // Create mock JWT: base64-encoded JSON payload
+  const payload = {
+    id: user.id,
+    name: user.name,
+    role: user.role,
+    exp: Date.now() + 24 * 60 * 60 * 1000 // 24 hours
+  };
+  const token = btoa(JSON.stringify(payload));
+
+  return Promise.resolve({
+    data: {
+      token,
+      staff: {
+        id: user.id,
+        name: user.name,
+        role: user.role
+      }
+    }
+  });
+}
+
+/**
  * Retrieves owner stats for a restaurant
  * @param {string} restaurantId - The restaurant ID
  * @returns {Promise<{data: object}>}
@@ -187,10 +272,10 @@ export const getOwnerStats = async (restaurantId) => {
     const orderDate = new Date(o.createdAt);
     return orderDate.toDateString() === today.toDateString();
   });
-  
+
   const todayRevenue = todayOrders.reduce((sum, o) => sum + o.totalAmount, 0);
   const avgOrderValue = todayOrders.length > 0 ? todayRevenue / todayOrders.length : 0;
-  
+
   // Calculate most popular item
   const itemCounts = {};
   restaurantOrders.forEach(order => {
@@ -198,7 +283,7 @@ export const getOwnerStats = async (restaurantId) => {
       itemCounts[item.menuItemId] = (itemCounts[item.menuItemId] || 0) + item.qty;
     });
   });
-  
+
   let mostPopularItemId = null;
   let maxCount = 0;
   for (const [itemId, count] of Object.entries(itemCounts)) {
@@ -207,9 +292,9 @@ export const getOwnerStats = async (restaurantId) => {
       mostPopularItemId = itemId;
     }
   }
-  
+
   const mostPopularItem = mostPopularItemId ? menuItems.find(i => i.id === mostPopularItemId) : null;
-  
+
   return Promise.resolve({
     data: {
       todayRevenue: parseFloat(todayRevenue.toFixed(2)),
@@ -230,7 +315,7 @@ export const getOwnerStats = async (restaurantId) => {
 export const updateMenuItemPrice = async (itemId, newPrice) => {
   const item = menuItems.find(i => i.id === itemId);
   if (!item) return Promise.resolve({ data: null });
-  
+
   item.price = parseFloat(newPrice);
   return Promise.resolve({ data: item });
 };

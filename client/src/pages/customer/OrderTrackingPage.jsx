@@ -17,7 +17,7 @@ export default function OrderTrackingPage() {
   const [toast, setToast] = useState('');
 
   const tableId = searchParams.get('table');
-  const restaurantSlug = searchParams.get('restaurant') || 'spice-garden';
+  const restaurantId = searchParams.get('restaurant') || 'rest_1';
 
   useEffect(() => {
     const loadOrder = async () => {
@@ -63,7 +63,7 @@ export default function OrderTrackingPage() {
   };
 
   const handleOrderAgain = () => {
-    navigate(`/menu/${restaurantSlug}/table/${tableId}`);
+    navigate(`/menu/${restaurantId}/table/${tableId}`);
   };
 
   if (loading) {
@@ -80,7 +80,7 @@ export default function OrderTrackingPage() {
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">Order Not Found</h1>
           <button
-            onClick={() => navigate(`/menu/${restaurantSlug}/table/${tableId}`)}
+            onClick={() => navigate(`/menu/${restaurantId}/table/${tableId}`)}
             className="px-6 py-3 bg-amber-600 text-white font-bold rounded-lg hover:bg-amber-700"
           >
             Back to Menu
@@ -123,7 +123,7 @@ export default function OrderTrackingPage() {
                 </div>
                 <div className="flex items-center gap-4">
                   <span className="font-semibold text-gray-700">×{item.qty}</span>
-                  <span className="font-bold text-orange-600">${(item.price * item.qty).toFixed(2)}</span>
+                  <span className="font-bold text-orange-600">₹{(item.price * item.qty).toFixed(0)}</span>
                 </div>
               </div>
             ))}
@@ -131,7 +131,7 @@ export default function OrderTrackingPage() {
           <div className="mt-6 pt-4 border-t border-gray-300">
             <div className="flex items-center justify-between">
               <span className="text-lg font-bold text-gray-900">Total</span>
-              <span className="text-2xl font-bold text-orange-600">${order.totalAmount.toFixed(2)}</span>
+              <span className="text-2xl font-bold text-orange-600">₹{order.totalAmount.toFixed(0)}</span>
             </div>
           </div>
         </div>

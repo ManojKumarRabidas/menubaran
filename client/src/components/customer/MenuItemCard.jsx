@@ -2,46 +2,52 @@
  * Menu item card displaying item details with gradient placeholder
  */
 export const MenuItemCard = ({ item, onAddClick }) => {
-  const vegIndicator = item.isVeg ? '🟢' : '🔴';
-  const popularBadge = item.isPopular ? '⭐' : '';
+  const isVeg = item.isVeg;
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-200">
-      {/* Gradient Image Placeholder */}
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col">
+      {/* Image / Gradient Area */}
       <div
-        className={`h-40 bg-gradient-to-br ${item.gradientFrom} ${item.gradientTo} flex items-center justify-center`}
+        className={`relative h-44 bg-gradient-to-br ${item.gradientFrom} ${item.gradientTo} flex items-center justify-center`}
       >
-        <span className="text-4xl opacity-50">🍽️</span>
+        <span className="text-5xl opacity-60">{item.emoji || '🍽️'}</span>
+
+        {/* Veg / Non-Veg Indicator */}
+        <div className={`absolute top-3 left-3 w-5 h-5 rounded-sm border-2 flex items-center justify-center ${
+          isVeg
+            ? 'border-green-600 bg-white'
+            : 'border-red-600 bg-white'
+        }`}>
+          <div className={`w-2.5 h-2.5 rounded-full ${isVeg ? 'bg-green-600' : 'bg-red-600'}`} />
+        </div>
+
+        {/* Popular Badge */}
+        {item.isPopular && (
+          <div className="absolute top-3 right-3 bg-amber-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm">
+            ⭐ Popular
+          </div>
+        )}
       </div>
 
       {/* Content */}
-      <div className="p-4">
-        <div className="flex items-start justify-between mb-2">
-          <h3 className="font-bold text-lg text-gray-900">{item.name}</h3>
-          <span className="text-sm">{vegIndicator}</span>
-        </div>
+      <div className="p-4 flex flex-col flex-1">
+        <h3 className="font-bold text-base text-gray-900 leading-snug mb-1">{item.name}</h3>
+        <p className="text-sm text-gray-500 line-clamp-2 mb-3 flex-1">{item.description}</p>
 
-        {item.isPopular && (
-          <div className="inline-block text-xs font-semibold text-amber-700 bg-amber-100 px-2 py-1 rounded mb-2">
-            {popularBadge} Popular
+        <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-50">
+          <div className="flex flex-col">
+            <span className="text-lg font-extrabold text-gray-900">₹{item.price.toFixed(0)}</span>
+            <span className="text-xs text-gray-400 flex items-center gap-1">
+              ⏱ {item.preparationTimeMinutes} min
+            </span>
           </div>
-        )}
-
-        <p className="text-sm text-gray-600 mb-3 line-clamp-2">{item.description}</p>
-
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-gray-500 flex items-center gap-1">
-            ⏱️ {item.preparationTimeMinutes} min
-          </div>
-          <span className="font-bold text-lg text-orange-600">${item.price.toFixed(2)}</span>
+          <button
+            onClick={() => onAddClick(item)}
+            className="flex items-center gap-1.5 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-bold px-4 py-2 rounded-xl text-sm transition-all duration-150 shadow-sm"
+          >
+            <span className="text-base leading-none">＋</span> Add
+          </button>
         </div>
-
-        <button
-          onClick={() => onAddClick(item)}
-          className="mt-3 w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 rounded-lg transition-colors duration-200"
-        >
-          + Add
-        </button>
       </div>
     </div>
   );

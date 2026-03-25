@@ -8,38 +8,38 @@ A complete, production-ready restaurant management system built with React + Vit
 ┌─────────────────────────────────────────────────────────────┐
 │                    Restaurant SaaS                          │
 ├─────────────────────────────────────────────────────────────┤
-│                                                              │
-│  ┌─────────────────┐         ┌─────────────────────────┐   │
-│  │   CUSTOMER      │         │    STAFF (Protected)    │   │
-│  │  No Auth        │         │    JWT Auth             │   │
-│  │                 │         │                         │   │
-│  │  • Menu Browse  │         │ Roles:                  │   │
-│  │  • Cart Mgmt    │         │ • Cook → Kitchen        │   │
-│  │  • Ordering     │         │ • Waiter → Floor Mgmt   │   │
-│  │  • Live Track   │         │ • Owner → Dashboard     │   │
-│  └────────┬────────┘         └────────┬────────────────┘   │
-│           │                           │                    │
-│           └───────────┬───────────────┘                    │
+│                                                             │
+│  ┌─────────────────┐         ┌─────────────────────────┐    │
+│  │   CUSTOMER      │         │    STAFF (Protected)    │    │
+│  │  No Auth        │         │    JWT Auth             │    │
+│  │                 │         │                         │    │
+│  │  • Menu Browse  │         │ Roles:                  │    │
+│  │  • Cart Mgmt    │         │ • Cook → Kitchen        │    │
+│  │  • Ordering     │         │ • Waiter → Floor Mgmt   │    │
+│  │  • Live Track   │         │ • Owner → Dashboard     │    │
+│  └────────┬────────┘         └────────┬────────────────┘    │
+│           │                           │                     │
+│           └───────────┬───────────────┘                     │
 │                       ▼                                     │
-│           ┌──────────────────────┐                         │
-│           │   React 18 + Vite    │                         │
-│           │   - Context API      │                         │
-│           │   - Socket.io Client │                         │
-│           │   - React Router v6  │                         │
-│           └──────────┬───────────┘                         │
-│                      │                                     │
-│    ┌─────────────────┼─────────────────┐                  │
-│    ▼                 ▼                 ▼                  │
-│  /api/          /api/auth/        /socket.io            │
-│  (public)       (staff)           (realtime)            │
-│                                                          │
-│  ┌─────────────────────────────────────────────────┐    │
-│  │         Express Server (Port 5000)              │    │
-│  │  - Mock JWT Auth                               │    │
-│  │  - Socket.io Event Broadcasting                │    │
-│  │  - Structured TODO Routes (ready for backend)  │    │
-│  └──────────────────────────────────────────────────┘    │
-│                                                           │
+│           ┌──────────────────────┐                          │
+│           │   React 18 + Vite    │                          │
+│           │   - Context API      │                          │
+│           │   - Socket.io Client │                          │
+│           │   - React Router v6  │                          │
+│           └──────────┬───────────┘                          │
+│                      │                                      │
+│    ┌─────────────────┼─────────────────┐                    │
+│    ▼                 ▼                 ▼                    │
+│  /api/          /api/auth/        /socket.io                │
+│  (public)       (staff)           (realtime)                │
+│                                                             │
+│  ┌──────────────────────────────────────────────────┐       │
+│  │         Express Server (Port 5000)               │       │
+│  │  - Mock JWT Auth                                 │       │
+│  │  - Socket.io Event Broadcasting                  │       │
+│  │  - Structured TODO Routes (ready for backend)    │       │
+│  └──────────────────────────────────────────────────┘       │
+│                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -82,6 +82,7 @@ restaurant-saas/
 
 ### Prerequisites
 - Node.js 16+ and npm
+- MongoDB (for real backend implementation, not required for mock)
 
 ### 1. Install Dependencies
 
@@ -123,12 +124,12 @@ The frontend automatically proxies `/api` requests to the backend.
 
 ## Role Access Matrix
 
-| Role  | URL Path              | Features                                    |
-|-------|----------------------|---------------------------------------------|
-| Cook  | `/kitchen`           | View pending orders, start cooking, mark ready, audio alerts |
-| Waiter| `/floor`             | Manage tables, real-time notifications      |
-| Owner | `/dashboard`         | KPI stats, menu pricing, popular dishes, recent orders |
-| Customer | `/menu/:slug/table/:id` | Browse menu, customize items, cart, track orders |
+| Role     | URL Path                | Features                                                     |
+|----------|-------------------------|--------------------------------------------------------------|
+| Cook     | `/kitchen`              | View pending orders, start cooking, mark ready, audio alerts |
+| Waiter   | `/floor`                | Manage tables, real-time notifications                       |
+| Owner    | `/dashboard`            | KPI stats, menu pricing, popular dishes, recent orders       |
+| Customer | `/menu/:slug/table/:id` | Browse menu, customize items, cart, track orders             |
 
 ## Mock Staff Credentials
 

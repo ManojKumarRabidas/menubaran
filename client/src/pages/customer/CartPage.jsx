@@ -15,7 +15,7 @@ export default function CartPage() {
   const [toast, setToast] = useState('');
   const [instructions, setLocalInstructions] = useState(specialInstructions);
 
-  const { restaurantSlug = 'spice-garden', tableId = 'table_1' } = location.state || {};
+  const { restaurantId = 'rest_1', tableId = 'table_1' } = location.state || {};
 
   const subtotal = getTotalAmount();
   const tax = subtotal * TAX_RATE;
@@ -31,7 +31,7 @@ export default function CartPage() {
     setLoading(true);
     try {
       const orderPayload = {
-        restaurantSlug,
+        restaurantSlug: restaurantId, // restaurantId is the real DB ID; api resolves via ID
         tableId,
         items: items.map(item => ({
           menuItemId: item.menuItemId,
@@ -46,7 +46,7 @@ export default function CartPage() {
       const response = await placeOrder(orderPayload);
       setInstructions(instructions);
       clearCart();
-      navigate(`/order/${response.data.id}?table=${tableId}&restaurant=${restaurantSlug}`);
+      navigate(`/order/${response.data.id}?table=${tableId}&restaurant=${restaurantId}`);
     } catch (err) {
       setToast('Failed to place order');
       setTimeout(() => setToast(''), 2000);
@@ -63,7 +63,7 @@ export default function CartPage() {
           <h1 className="text-3xl font-bold text-gray-900 mb-4">Your Cart is Empty</h1>
           <p className="text-gray-600 mb-8">Add some delicious items to get started!</p>
           <button
-            onClick={() => navigate(`/menu/${restaurantSlug}/table/${tableId}`)}
+            onClick={() => navigate(`/menu/${restaurantId}/table/${tableId}`)}
             className="px-8 py-3 bg-amber-600 text-white font-bold rounded-lg hover:bg-amber-700 transition"
           >
             Back to Menu
@@ -78,7 +78,7 @@ export default function CartPage() {
       <div className="max-w-3xl mx-auto px-4 py-8">
         <div className="mb-8">
           <button
-            onClick={() => navigate(`/menu/${restaurantSlug}/table/${tableId}`)}
+            onClick={() => navigate(`/menu/${restaurantId}/table/${tableId}`)}
             className="text-amber-600 font-semibold mb-4 hover:text-amber-700 flex items-center gap-1"
           >
             ← Back to Menu
@@ -102,7 +102,7 @@ export default function CartPage() {
                   {item.note && (
                     <p className="text-sm text-gray-600 italic">{item.note}</p>
                   )}
-                  <p className="text-sm text-gray-500">${item.price.toFixed(2)} each</p>
+                  <p className="text-sm text-gray-500">₹{item.price.toFixed(0)} each</p>
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -123,7 +123,7 @@ export default function CartPage() {
                   </div>
 
                   <p className="font-bold text-lg text-orange-600 w-20 text-right">
-                    ${(item.price * item.qty).toFixed(2)}
+                    ₹{(item.price * item.qty).toFixed(0)}
                   </p>
 
                   <button
@@ -155,16 +155,16 @@ export default function CartPage() {
           <div className="space-y-3 mb-4 border-b border-gray-200 pb-4">
             <div className="flex items-center justify-between">
               <span className="text-gray-600">Subtotal</span>
-              <span className="font-semibold text-gray-900">${subtotal.toFixed(2)}</span>
+              <span className="font-semibold text-gray-900">₹{subtotal.toFixed(0)}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-gray-600">Tax (5% GST)</span>
-              <span className="font-semibold text-gray-900">${tax.toFixed(2)}</span>
+              <span className="font-semibold text-gray-900">₹{tax.toFixed(0)}</span>
             </div>
           </div>
           <div className="flex items-center justify-between mb-6">
             <span className="text-lg font-bold text-gray-900">Total</span>
-            <span className="text-3xl font-bold text-orange-600">${total.toFixed(2)}</span>
+            <span className="text-3xl font-bold text-orange-600">₹{total.toFixed(0)}</span>
           </div>
 
           <button

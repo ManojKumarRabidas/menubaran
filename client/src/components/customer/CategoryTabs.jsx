@@ -16,7 +16,7 @@ export const CategoryTabs = ({ categories, selectedCategoryId, onCategorySelect 
   }, [selectedCategoryId]);
 
   return (
-    <div className="sticky top-0 bg-white border-b border-gray-200 shadow-sm z-10">
+    <div className="bg-white border-b border-gray-100 shadow-sm z-20 sticky top-[61px]">
       <div
         ref={scrollContainerRef}
         className="flex gap-2 overflow-x-auto px-4 py-3 no-scrollbar"
@@ -26,13 +26,13 @@ export const CategoryTabs = ({ categories, selectedCategoryId, onCategorySelect 
             key={category.id}
             data-active={category.id === selectedCategoryId}
             onClick={() => onCategorySelect(category.id)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-all duration-200 ${
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-semibold whitespace-nowrap text-sm transition-all duration-200 border ${
               category.id === selectedCategoryId
-                ? 'bg-amber-600 text-white shadow-md'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? 'bg-amber-600 text-white border-amber-600 shadow-md shadow-amber-200'
+                : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-amber-50 hover:border-amber-300 hover:text-amber-700'
             }`}
           >
-            <span className="text-xl">{category.icon}</span>
+            <span className="text-base leading-none">{category.icon}</span>
             <span>{category.name}</span>
           </button>
         ))}

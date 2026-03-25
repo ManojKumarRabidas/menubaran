@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth.js';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner.jsx';
-import { staffLogin } from '../../services/api.js';
+import { staffLogin, adminLogin } from '../../services/api.js';
 
-export default function LoginPage() {
+export default function LoginPage({ isAdmin = false }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -20,17 +20,17 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await staffLogin(email, password);
+      // const response = await staffLogin(email, password);
+      const response = isAdmin
+        ? await adminLogin(email, password)        // your admin API
+        : await staffLogin(email, password);
       const success = login(response.data.token);
-      
+
       if (success) {
         // Redirect based on role
-        const roleRoutes = {
-          cook: '/kitchen',
-          waiter: '/floor',
-          owner: '/dashboard'
-        };
-        const route = roleRoutes[response.data.staff.role] || '/';
+        const route = isAdmin
+          ? '/admin-dashboard'
+          : ({ cook: '/kitchen', waiter: '/floor', owner: '/dashboard' }[response.data.staff.role] || '/');
         navigate(route);
       } else {
         setError('Invalid credentials');
@@ -49,8 +49,12 @@ export default function LoginPage() {
           {/* Header */}
           <div className="text-center mb-8">
             <div className="text-5xl mb-4">🍽️</div>
-            <h1 className="text-3xl font-bold text-gray-900">Staff Login</h1>
-            <p className="text-gray-600 mt-2">Restaurant Management System</p>
+            <h1 className="text-3xl font-bold text-gray-900">
+              {isAdmin ? 'Admin Login' : 'Staff Login'}
+            </h1>
+            <p className="text-gray-600 mt-2">
+              {isAdmin ? 'Admin Portal' : 'Restaurant Management System'}
+            </p>
           </div>
 
           {/* Error Message */}
@@ -110,15 +114,17 @@ export default function LoginPage() {
           </form>
 
           {/* Demo Credentials */}
-          <div className="mt-8 pt-8 border-t border-gray-200">
-            <p className="text-xs text-gray-500 font-semibold mb-3">DEMO CREDENTIALS</p>
-            <div className="space-y-2 text-xs text-gray-600">
-              <p>👨‍🍳 Cook: <code className="bg-gray-100 px-2 py-1 rounded">cook@spice-garden.com</code></p>
-              <p>🧑‍💼 Waiter: <code className="bg-gray-100 px-2 py-1 rounded">waiter@spice-garden.com</code></p>
-              <p>👔 Owner: <code className="bg-gray-100 px-2 py-1 rounded">owner@spice-garden.com</code></p>
-              <p>Password for all: <code className="bg-gray-100 px-2 py-1 rounded">password123</code></p>
+          {!isAdmin && (
+            <div className="mt-8 pt-8 border-t border-gray-200">
+              <p className="text-xs text-gray-500 font-semibold mb-3">DEMO CREDENTIALS</p>
+              <div className="space-y-2 text-xs text-gray-600">
+                <p>👨‍🍳 Cook: <code className="bg-gray-100 px-2 py-1 rounded">cook@spice-garden.com</code></p>
+                <p>🧑‍💼 Waiter: <code className="bg-gray-100 px-2 py-1 rounded">waiter@spice-garden.com</code></p>
+                <p>👔 Owner: <code className="bg-gray-100 px-2 py-1 rounded">owner@spice-garden.com</code></p>
+                <p>Password for all: <code className="bg-gray-100 px-2 py-1 rounded">password123</code></p>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

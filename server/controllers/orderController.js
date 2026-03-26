@@ -1,5 +1,6 @@
 import Order from '../models/Orders.js';
 import Table from '../models/Tables.js';
+import { io } from '../server.js';
 
 export const getOrderById = async (req, res) => {
     try {
@@ -14,6 +15,18 @@ export const getOrderById = async (req, res) => {
 export const getOrdersByRestaurant = async (req, res) => {
     try {
         const docs = await Order.find({ restaurantId: req.params._id }).sort({ createdAt: -1 });
+        return res.json({ success: true, docs });
+    } catch (e) {
+        return res.status(500).json({ success: false, error: e.message });
+    }
+};
+
+export const getOrdersByTable = async (req, res) => {
+    try {
+        const docs = await Order.find({
+            tableId: req.params.tableId,
+            status: { $nin: ['cancelled', 'paid'] },
+        }).sort({ createdAt: -1 });
         return res.json({ success: true, docs });
     } catch (e) {
         return res.status(500).json({ success: false, error: e.message });
@@ -61,6 +74,16 @@ export const updateOrderStatus = async (req, res) => {
             { new: true, runValidators: true }
         );
         if (!doc) return res.status(404).json({ success: false, error: 'Order not found' });
+
+        // Broadcast to all connected clients so customer sees live update
+        io.emit('order:statusUpdate', {
+            orderId: doc._id,
+            newStatus: status,
+            tableId: doc.tableId,
+            tableNumber: doc.tableNumber,
+            restaurantId: doc.restaurantId,
+        });
+
         return res.json({ success: true, doc });
     } catch (e) {
         return res.status(500).json({ success: false, error: e.message });

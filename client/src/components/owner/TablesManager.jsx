@@ -69,7 +69,7 @@ export const TablesManager = ({ tables = [], orders = [], restaurantId, onToast,
         </div>
         <div className="flex gap-2 flex-wrap">
           {Object.entries(STATUS_STYLES).map(([key, val]) => (
-            <span key={key} className={`text-xs font-semibold px-2 py-1 rounded-full flex items-center justify-center ${val.badge}`}>{val.icon} {val.label}</span>
+            <span key={key} className={`text-xs font-semibold px-5 py-1 rounded-xl flex items-center justify-center ${val.badge}`}>{val.icon} {val.label}</span>
           ))}
           <button
             onClick={() => setAddingTable(true)}

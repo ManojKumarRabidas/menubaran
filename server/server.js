@@ -113,7 +113,7 @@ const server = http.createServer(app);
 // Supports multiple origins: FRONTEND_URL=http://localhost:3000,https://yourapp.com
 const allowedOrigins = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL.split(',').map(o => o.trim())
-  : ['http://localhost:3000'];
+  : ['http://localhost:3000', 'http://localhost:4173'];
 
 const corsOptions = {
   origin: (origin, callback) => {

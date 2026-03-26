@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const subscriptionPlanSchema = new mongoose.Schema(
     {
-        _id: { type: String, required: true, unique: true }, // human-readable _id e.g. 'plan_1'
+        _id: { type: String, required: true }, // human-readable _id e.g. 'plan_1'
         name: { type: String, required: true, trim: true },
         price: { type: Number, required: true },
         billingCycle: { type: String, enum: ['monthly', 'yearly'], default: 'monthly' },

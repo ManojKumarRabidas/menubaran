@@ -107,7 +107,7 @@ export async function runSeed() {
 }
 
 // ── Standalone execution: `node seed.js` ─────────────────────────────────────
-if (process.argv[1].endsWith('seed.js')) {
+if (process.argv[1]?.endsWith('seed.js')) {
     import('mongoose').then(({ default: mongoose }) => {
         import('dotenv').then(({ default: dotenv }) => {
             dotenv.config();

@@ -1,34 +1,30 @@
 
-# Dependencies
-/node_modules/
-package-lock.json
+# ── Dependencies ──────────────────────────────────────────────────────────────
+node_modules/
+.npm/
+
+# ── Lockfiles (keep package-lock.json, ignore others) ────────────────────────
 yarn.lock
 pnpm-lock.yaml
 
-# Production
-dist/
-dist-ssr/
-*.local
-
-# Environment
+# ── Environment — NEVER commit real secrets ───────────────────────────────────
 .env
 .env.local
 .env.*.local
+# .env.example IS committed on purpose (safe template with no real values)
 
-# IDE
+# ── IDE / OS ──────────────────────────────────────────────────────────────────
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 .DS_Store
+Thumbs.db
 
-# Logs
+# ── Logs ──────────────────────────────────────────────────────────────────────
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-lerna-debug.log*
-
-# Legacy
-.next/

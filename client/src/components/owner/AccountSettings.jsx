@@ -26,7 +26,7 @@
 //  * Account & Settings panel — combined component used in two tabs
 //  */
 // export const AccountSettings = ({ restaurant: restaurantProp, restaurantId, onToast, tab = 'account' }) => {
-//   const restaurant = restaurantProp || restaurants.find(r => r.id === restaurantId) || {};
+//   const restaurant = restaurantProp || restaurants.find(r => r._id === restaurantId) || {};
 //   const restaurantStaff = staff.filter(s => s.restaurantId === restaurantId);
 //   const plan = subscriptionPlans.find(p => p.name.toLowerCase() === restaurant.subscriptionPlan) || subscriptionPlans[1];
 
@@ -172,7 +172,7 @@
 //         <h3 className="font-bold text-gray-900 text-lg mb-4">Staff Members</h3>
 //         <div className="space-y-3">
 //           {restaurantStaff.map(s => (
-//             <div key={s.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+//             <div key={s._id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
 //               <div className={`w-10 h-10 rounded-full ${s.avatarColor} flex items-center justify-center text-white font-extrabold flex-shrink-0`}>
 //                 {s.name[0]}
 //               </div>
@@ -296,12 +296,12 @@ const StaffFormModal = ({ member, onClose, onSave, existingEmails }) => {
 
     setSaving(true);
     await new Promise(r => setTimeout(r, 500)); // simulate async
-    onSave(form, isEdit ? member.id : null);
+    onSave(form, isEdit ? member._id : null);
     setSaving(false);
     onClose();
   };
 
-  const Field = ({ label, id, error, children }) => (
+  const Field = ({ label, _id, error, children }) => (
     <div>
       <label className="text-xs font-bold text-gray-500 uppercase tracking-wide block mb-1">{label}</label>
       {children}
@@ -528,18 +528,20 @@ export const AccountSettings = ({
   onToast,
   tab = 'account',
 }) => {
-  const restaurant = restaurantProp || restaurants.find(r => r.id === restaurantId) || {};
+  console.log("restorent id", restaurantId);
+  console.log("restorent prop", restaurantProp);
+  const restaurant = restaurantProp.data || restaurants.find(r => r._id === restaurantId) || {};
   const plan = subscriptionPlans.find(p =>
     p.name.toLowerCase() === restaurant.subscriptionPlan
   ) || subscriptionPlans[1];
 
   // Staff state — seeded from data.js, managed locally until backend is ready
-  const [staffList, setStaffList] = useState(
-    () => initialStaff
-      .filter(s => s.restaurantId === restaurantId)
-      .map(s => ({ ...s, isActive: s.isActive !== undefined ? s.isActive : true }))
-  );
-
+  // const [staffList, setStaffList] = useState(
+  //   () => initialStaff
+  //     .filter(s => s.restaurantId === restaurantId)
+  //     .map(s => ({ ...s, isActive: s.isActive !== undefined ? s.isActive : true }))
+  // );
+  const [staffList, setStaffList] = useState([])
   // Modal states
   const [formModal, setFormModal] = useState(null);  // null | 'add' | staffMember object
   const [confirmModal, setConfirmModal] = useState(null);  // null | { type, member }
@@ -564,7 +566,7 @@ export const AccountSettings = ({
     if (editId) {
       // Update existing
       setStaffList(prev => prev.map(s =>
-        s.id === editId
+        s._id === editId
           ? {
             ...s,
             name: formData.name,
@@ -577,9 +579,9 @@ export const AccountSettings = ({
       ));
       onToast?.('Staff member updated!', 'success');
     } else {
-      // Add new — generate a temp id (backend will replace with real id)
+      // Add new — generate a temp _id (backend will replace with real _id)
       const newMember = {
-        id: `temp-${Date.now()}`,
+        _id: `temp-${Date.now()}`,
         restaurantId,
         name: formData.name,
         email: formData.email,
@@ -594,13 +596,13 @@ export const AccountSettings = ({
   };
 
   const handleDeleteConfirm = (member) => {
-    setStaffList(prev => prev.filter(s => s.id !== member.id));
+    setStaffList(prev => prev.filter(s => s._id !== member._id));
     onToast?.(`${member.name} removed from staff`, 'info');
   };
 
   const handleToggleActiveConfirm = (member) => {
     setStaffList(prev => prev.map(s =>
-      s.id === member.id ? { ...s, isActive: !s.isActive } : s
+      s._id === member._id ? { ...s, isActive: !s.isActive } : s
     ));
     const action = member.isActive === false ? 'activated' : 'deactivated';
     onToast?.(`${member.name} ${action}`, 'info');
@@ -808,7 +810,7 @@ export const AccountSettings = ({
           ) : (
             staffList.map(member => (
               <StaffRow
-                key={member.id}
+                key={member._id}
                 member={member}
                 onEdit={m => setFormModal(m)}
                 onDelete={m => setConfirmModal({ type: 'delete', member: m })}

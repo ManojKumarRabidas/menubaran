@@ -100,7 +100,7 @@ export default function OrderTrackingPage() {
         )}
 
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Order #{order.id.split('_')[1]}</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Order #{order._id.split('_')[1]}</h1>
           <p className="text-gray-600">
             Table {order.tableNumber} • {new Date(order.createdAt).toLocaleTimeString()}
           </p>

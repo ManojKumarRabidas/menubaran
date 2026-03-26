@@ -77,7 +77,7 @@ export default function KitchenDisplayPage() {
       if (data.restaurantId === user?.restaurantId) {
         setOrders(prev =>
           prev.map(order =>
-            order.id === data.orderId
+            order._id === data.orderId
               ? { ...order, status: data.newStatus }
               : order
           )
@@ -96,7 +96,7 @@ export default function KitchenDisplayPage() {
       await updateOrderStatus(orderId, 'cooking');
       setOrders(prev =>
         prev.map(order =>
-          order.id === orderId ? { ...order, status: 'cooking' } : order
+          order._id === orderId ? { ...order, status: 'cooking' } : order
         )
       );
       socket?.emit('order:statusUpdate', {
@@ -114,7 +114,7 @@ export default function KitchenDisplayPage() {
       await updateOrderStatus(orderId, 'ready');
       setOrders(prev =>
         prev.map(order =>
-          order.id === orderId ? { ...order, status: 'ready' } : order
+          order._id === orderId ? { ...order, status: 'ready' } : order
         )
       );
       socket?.emit('order:statusUpdate', {
@@ -181,11 +181,10 @@ export default function KitchenDisplayPage() {
             <button
               key={option}
               onClick={() => setFilter(option)}
-              className={`px-6 py-2 rounded-full font-semibold capitalize transition-all ${
-                filter === option
+              className={`px-6 py-2 rounded-full font-semibold capitalize transition-all ${filter === option
                   ? 'bg-green-600 text-white shadow-lg'
                   : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-              }`}
+                }`}
             >
               {option}
               {option === 'all' && (
@@ -204,7 +203,7 @@ export default function KitchenDisplayPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredOrders.map(order => (
                 <OrderTicket
-                  key={order.id}
+                  key={order._id}
                   order={order}
                   onStartCooking={handleStartCooking}
                   onMarkReady={handleMarkReady}

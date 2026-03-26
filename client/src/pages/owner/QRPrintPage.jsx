@@ -20,9 +20,10 @@ export default function QRPrintPage() {
 
   useEffect(() => {
     const load = async () => {
+      console.log(restaurantId, tableId)
       const [restRes, tableRes] = await Promise.all([
         getRestaurantById(restaurantId),
-        getTableById(tableId),
+        getTableById(restaurantId, tableId),
       ]);
       setRestaurant(restRes.data);
       setTable(tableRes.data);

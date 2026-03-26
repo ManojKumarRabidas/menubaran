@@ -9,18 +9,18 @@ export const MenuPriceEditor = ({ items = [], onSavePrice, onToast }) => {
   const [unsavedIds, setUnsavedIds] = useState(new Set());
 
   const handleEditClick = (item) => {
-    setEditingId(item.id);
+    setEditingId(item._id);
     setEditingPrice(item.price.toString());
   };
 
   const handleSave = (item) => {
     const newPrice = parseFloat(editingPrice);
     if (!isNaN(newPrice) && newPrice > 0) {
-      onSavePrice(item.id, newPrice);
+      onSavePrice(item._id, newPrice);
       setEditingId(null);
       setUnsavedIds(prev => {
         const next = new Set(prev);
-        next.delete(item.id);
+        next.delete(item._id);
         return next;
       });
       onToast?.('Price updated!');
@@ -51,15 +51,14 @@ export const MenuPriceEditor = ({ items = [], onSavePrice, onToast }) => {
           <tbody className="divide-y divide-gray-200">
             {items.map(item => (
               <tr
-                key={item.id}
-                className={`hover:bg-gray-50 transition-colors ${
-                  unsavedIds.has(item.id) ? 'bg-amber-50' : ''
-                }`}
+                key={item._id}
+                className={`hover:bg-gray-50 transition-colors ${unsavedIds.has(item._id) ? 'bg-amber-50' : ''
+                  }`}
               >
                 <td className="px-6 py-4 text-sm font-semibold text-gray-900">{item.name}</td>
                 <td className="px-6 py-4 text-sm text-gray-600">{item.category || '—'}</td>
                 <td className="px-6 py-4 text-sm font-mono">
-                  {editingId === item.id ? (
+                  {editingId === item._id ? (
                     <input
                       type="number"
                       value={editingPrice}
@@ -73,7 +72,7 @@ export const MenuPriceEditor = ({ items = [], onSavePrice, onToast }) => {
                   )}
                 </td>
                 <td className="px-6 py-4 text-sm space-x-2">
-                  {editingId === item.id ? (
+                  {editingId === item._id ? (
                     <>
                       <button
                         onClick={() => handleSave(item)}

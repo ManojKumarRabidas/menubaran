@@ -32,7 +32,7 @@ export const PopularDishesChart = ({ items = [] }) => {
           {topItems.map((item, idx) => {
             const pct = Math.round(((item.orderCount || 0) / maxCount) * 100);
             return (
-              <div key={item.id}>
+              <div key={item._id}>
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-2">
                     <span className="text-xl">{MEDALS[idx]}</span>

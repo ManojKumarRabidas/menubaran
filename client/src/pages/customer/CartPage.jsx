@@ -10,7 +10,7 @@ export default function CartPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { items, getTotalAmount, setInstructions, specialInstructions, removeItem, updateQty, clearCart } = useCart();
-  
+
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState('');
   const [instructions, setLocalInstructions] = useState(specialInstructions);
@@ -46,7 +46,7 @@ export default function CartPage() {
       const response = await placeOrder(orderPayload);
       setInstructions(instructions);
       clearCart();
-      navigate(`/order/${response.data.id}?table=${tableId}&restaurant=${restaurantId}`);
+      navigate(`/order/${response.data._id}?table=${tableId}&restaurant=${restaurantId}`);
     } catch (err) {
       setToast('Failed to place order');
       setTimeout(() => setToast(''), 2000);

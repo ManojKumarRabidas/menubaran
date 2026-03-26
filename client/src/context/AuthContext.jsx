@@ -17,7 +17,7 @@ export const AuthProvider = ({ children }) => {
       const payload = decodeToken(storedToken);
       setToken(storedToken);
       setUser({
-        id: payload.id,
+        _id: payload._id,
         name: payload.name,
         role: payload.role,
         restaurantId: payload.restaurantId
@@ -34,7 +34,7 @@ export const AuthProvider = ({ children }) => {
     if (payload) {
       setToken(newToken);
       setUser({
-        id: payload.id,
+        _id: payload._id,
         name: payload.name,
         role: payload.role,
         restaurantId: payload.restaurantId

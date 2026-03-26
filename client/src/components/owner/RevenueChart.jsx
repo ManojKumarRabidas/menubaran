@@ -34,7 +34,7 @@ export const RevenueChart = ({ data = [] }) => {
             <div key={item.day} className="flex-1 flex flex-col items-center gap-1 group" style={{ maxWidth: '6rem' }}>
               {/* Tooltip */}
               <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-xs rounded-lg px-2 py-1 whitespace-nowrap pointer-events-none mb-1">
-                ${item.revenue} • {item.orders} orders
+                ₹{item.revenue} • {item.orders} orders
               </div>
               {/* Bar */}
               <div className="w-full flex items-end justify-center" style={{ height: '160px' }}>
@@ -47,7 +47,7 @@ export const RevenueChart = ({ data = [] }) => {
               </div>
               {/* Label */}
               <span className="text-xs font-semibold text-gray-500">{item.day}</span>
-              <span className="text-xs font-bold text-gray-800">${item.revenue}</span>
+              <span className="text-xs font-bold text-gray-800">₹{item.revenue}</span>
             </div>
           );
         })}

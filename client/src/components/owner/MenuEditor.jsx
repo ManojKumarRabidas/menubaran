@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { updateMenuItem, addMenuItem } from '../../services/api.js';
 
-const EMOJIS = ['🍕','🍔','🌮','🍜','🍣','🥗','🍗','🥩','🍝','🥘','🫕','🍛','🍞','🥐','🧆','🍱','🥟','🍢','🫔','🧇','🍦','🧁','🍩','🥤','☕','🍵','🧃','🫖','🍺','🥂'];
+const EMOJIS = ['🍕', '🍔', '🌮', '🍜', '🍣', '🥗', '🍗', '🥩', '🍝', '🥘', '🫕', '🍛', '🍞', '🥐', '🧆', '🍱', '🥟', '🍢', '🫔', '🧇', '🍦', '🧁', '🍩', '🥤', '☕', '🍵', '🧃', '🫖', '🍺', '🥂'];
 
 const STATUS_COLORS = {
   true: 'bg-emerald-100 text-emerald-700',
@@ -19,7 +19,7 @@ export const MenuEditor = ({ items = [], categories = [], restaurantId, onToast,
   const [editDraft, setEditDraft] = useState({});
   const [bulkMode, setBulkMode] = useState(false);
   const [bulkPct, setBulkPct] = useState('');
-  const [emojiPicker, setEmojiPicker] = useState(null); // 'add' | item.id | null
+  const [emojiPicker, setEmojiPicker] = useState(null); // 'add' | item._id | null
   const [search, setSearch] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [newItem, setNewItem] = useState(BLANK_NEW);
@@ -27,6 +27,7 @@ export const MenuEditor = ({ items = [], categories = [], restaurantId, onToast,
   const [saving, setSaving] = useState(false);
 
   const filtered = items.filter(item => {
+    console.log(item)
     const matchCat = activeCat === 'all' || item.categoryId === activeCat;
     const matchSearch = item.name.toLowerCase().includes(search.toLowerCase());
     return matchCat && matchSearch;
@@ -37,6 +38,7 @@ export const MenuEditor = ({ items = [], categories = [], restaurantId, onToast,
   const closeAdd = () => { setShowAddModal(false); setNewItem(BLANK_NEW); setAddEmojiOpen(false); };
 
   const saveNewItem = async () => {
+    console.log("newitem", newItem);
     const name = newItem.name?.trim();
     const price = parseFloat(newItem.price);
     if (!name) { onToast?.('Please enter item name', 'error'); return; }
@@ -63,7 +65,7 @@ export const MenuEditor = ({ items = [], categories = [], restaurantId, onToast,
 
   /* ── Edit existing item ── */
   const startEdit = (item) => {
-    setEditingId(item.id);
+    setEditingId(item._id);
     setEditDraft({
       name: item.name,
       price: item.price,
@@ -82,14 +84,14 @@ export const MenuEditor = ({ items = [], categories = [], restaurantId, onToast,
     if (!name || isNaN(price) || price <= 0) {
       onToast?.('Please enter valid name and price', 'error'); return;
     }
-    await updateMenuItem(item.id, {
+    await updateMenuItem(item._id, {
       name, price,
       emoji: editDraft.emoji,
       categoryId: editDraft.categoryId,
       isAvailable: editDraft.isAvailable,
     });
     onItemsChange(prev => prev.map(i =>
-      i.id === item.id
+      i._id === item._id
         ? { ...i, name, price, emoji: editDraft.emoji, categoryId: editDraft.categoryId, isAvailable: editDraft.isAvailable }
         : i
     ));
@@ -99,8 +101,8 @@ export const MenuEditor = ({ items = [], categories = [], restaurantId, onToast,
 
   const toggleAvailability = async (item) => {
     const next = !item.isAvailable;
-    await updateMenuItem(item.id, { isAvailable: next });
-    onItemsChange(prev => prev.map(i => i.id === item.id ? { ...i, isAvailable: next } : i));
+    await updateMenuItem(item._id, { isAvailable: next });
+    onItemsChange(prev => prev.map(i => i._id === item._id ? { ...i, isAvailable: next } : i));
     onToast?.(next ? `${item.name} is now available` : `${item.name} marked unavailable`, 'info');
   };
 
@@ -112,9 +114,9 @@ export const MenuEditor = ({ items = [], categories = [], restaurantId, onToast,
       ...item,
       price: Math.round(item.price * (1 + pct / 100) * 100) / 100
     }));
-    await Promise.all(toUpdate.map(item => updateMenuItem(item.id, { price: item.price })));
+    await Promise.all(toUpdate.map(item => updateMenuItem(item._id, { price: item.price })));
     onItemsChange(prev => prev.map(i => {
-      const updated = toUpdate.find(u => u.id === i.id);
+      const updated = toUpdate.find(u => u._id === i._id);
       return updated ? { ...i, price: updated.price } : i;
     }));
     onToast?.(`Prices updated by ${pct > 0 ? '+' : ''}${pct}%`, 'success');
@@ -141,7 +143,7 @@ export const MenuEditor = ({ items = [], categories = [], restaurantId, onToast,
       >
         <option value="">— Select category —</option>
         {categories.map(cat => (
-          <option key={cat.id} value={cat.id}>{cat.icon} {cat.name}</option>
+          <option key={cat._id} value={cat._id}>{cat.icon} {cat.name}</option>
         ))}
       </select>
     </div>
@@ -169,9 +171,9 @@ export const MenuEditor = ({ items = [], categories = [], restaurantId, onToast,
           >All</button>
           {categories.map(cat => (
             <button
-              key={cat.id}
-              onClick={() => setActiveCat(cat.id)}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition ${activeCat === cat.id ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+              key={cat._id}
+              onClick={() => setActiveCat(cat._id)}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition ${activeCat === cat._id ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
             >
               {cat.icon} {cat.name}
             </button>
@@ -212,11 +214,11 @@ export const MenuEditor = ({ items = [], categories = [], restaurantId, onToast,
       {/* ── Item Cards Grid ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {filtered.map(item => {
-          const isEditing = editingId === item.id;
-          const cat = categories.find(c => c.id === item.categoryId);
+          const isEditing = editingId === item._id;
+          const cat = categories.find(c => c._id === item.categoryId);
           return (
             <div
-              key={item.id}
+              key={item._id}
               className={`bg-white rounded-2xl shadow-md overflow-hidden border-2 transition ${isEditing ? 'border-indigo-400' : 'border-transparent hover:border-gray-200'}`}
             >
               {/* Card header */}
@@ -240,12 +242,12 @@ export const MenuEditor = ({ items = [], categories = [], restaurantId, onToast,
                     <div>
                       <label className="text-xs font-semibold text-gray-500 mb-1 block">Image (emoji)</label>
                       <div className="flex items-center gap-2">
-                        <span className="text-2xl cursor-pointer border rounded-lg p-1" onClick={() => setEmojiPicker(emojiPicker === item.id ? null : item.id)}>
+                        <span className="text-2xl cursor-pointer border rounded-lg p-1" onClick={() => setEmojiPicker(emojiPicker === item._id ? null : item._id)}>
                           {editDraft.emoji || '🍽️'}
                         </span>
                         <span className="text-xs text-gray-500">click to change</span>
                       </div>
-                      {emojiPicker === item.id && (
+                      {emojiPicker === item._id && (
                         <EmojiGrid onSelect={e => { setEditDraft(d => ({ ...d, emoji: e })); setEmojiPicker(null); }} />
                       )}
                     </div>

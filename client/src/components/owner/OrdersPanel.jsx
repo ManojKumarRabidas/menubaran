@@ -25,14 +25,14 @@
 //   const sorted = [...filtered].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
 //   const changeStatus = async (order, status) => {
-//     await updateOrderStatus(order.id, status);
-//     onOrdersChange(prev => prev.map(o => o.id === order.id ? { ...o, status, paymentStatus: status === 'paid' ? 'paid' : o.paymentStatus } : o));
-//     onToast?.(`Order ${order.id.substring(0, 8)} → ${status}`, 'success');
+//     await updateOrderStatus(order._id, status);
+//     onOrdersChange(prev => prev.map(o => o._id === order._id ? { ...o, status, paymentStatus: status === 'paid' ? 'paid' : o.paymentStatus } : o));
+//     onToast?.(`Order ${order._id.substring(0, 8)} → ${status}`, 'success');
 //   };
 
 //   const markPaid = async (order) => {
-//     await updateOrderStatus(order.id, 'paid');
-//     onOrdersChange(prev => prev.map(o => o.id === order.id ? { ...o, status: 'paid', paymentStatus: 'paid' } : o));
+//     await updateOrderStatus(order._id, 'paid');
+//     onOrdersChange(prev => prev.map(o => o._id === order._id ? { ...o, status: 'paid', paymentStatus: 'paid' } : o));
 //     onToast?.('Order marked as paid', 'success');
 //   };
 
@@ -68,17 +68,17 @@
 //             </thead>
 //             <tbody className="divide-y divide-gray-100">
 //               {sorted.map(order => {
-//                 const isExpanded = expandedId === order.id;
+//                 const isExpanded = expandedId === order._id;
 //                 const sc = STATUS_CONFIG[order.status] || STATUS_CONFIG.served;
 //                 const pc = PAY_CONFIG[order.paymentStatus] || PAY_CONFIG.unpaid;
 //                 return (
 //                   <>
 //                     <tr
-//                       key={order.id}
+//                       key={order._id}
 //                       className="hover:bg-gray-50 transition cursor-pointer"
-//                       onClick={() => setExpandedId(isExpanded ? null : order.id)}
+//                       onClick={() => setExpandedId(isExpanded ? null : order._id)}
 //                     >
-//                       <td className="px-4 py-3 text-xs font-mono text-gray-500">{order.id.substring(0, 8)}…</td>
+//                       <td className="px-4 py-3 text-xs font-mono text-gray-500">{order._id.substring(0, 8)}…</td>
 //                       <td className="px-4 py-3 text-sm font-bold text-gray-900">T{order.tableNumber}</td>
 //                       <td className="px-4 py-3 text-sm text-gray-600">{order.items.length} item{order.items.length !== 1 ? 's' : ''}</td>
 //                       <td className="px-4 py-3 text-sm font-extrabold text-indigo-600">₹{order.totalAmount.toFixed(2)}</td>
@@ -104,7 +104,7 @@
 //                     </tr>
 //                     {/* Expanded Detail Row */}
 //                     {isExpanded && (
-//                       <tr key={`${order.id}-detail`} className="bg-indigo-50">
+//                       <tr key={`${order._id}-detail`} className="bg-indigo-50">
 //                         <td colSpan="8" className="px-4 py-4">
 //                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 //                             <div>
@@ -254,22 +254,22 @@ export const OrdersPanel = ({ orders = [], onToast, onOrdersChange }) => {
 
   // ── Actions ────────────────────────────────────────────────────────────────
   const changeStatus = async (order, status) => {
-    await updateOrderStatus(order.id, status);
+    await updateOrderStatus(order._id, status);
     onOrdersChange(prev =>
       prev.map(o =>
-        o.id === order.id
+        o._id === order._id
           ? { ...o, status, paymentStatus: status === 'paid' ? 'paid' : o.paymentStatus }
           : o
       )
     );
-    onToast?.(`Order ${order.id.substring(0, 8)} → ${status}`, 'success');
+    onToast?.(`Order ${order._id.substring(0, 8)} → ${status}`, 'success');
   };
 
   const markPaid = async (order) => {
-    await updateOrderStatus(order.id, 'paid');
+    await updateOrderStatus(order._id, 'paid');
     onOrdersChange(prev =>
       prev.map(o =>
-        o.id === order.id ? { ...o, status: 'paid', paymentStatus: 'paid' } : o
+        o._id === order._id ? { ...o, status: 'paid', paymentStatus: 'paid' } : o
       )
     );
     onToast?.('Order marked as paid', 'success');
@@ -388,22 +388,22 @@ export const OrdersPanel = ({ orders = [], onToast, onOrdersChange }) => {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {filtered.map(order => {
-                const isExpanded = expandedId === order.id;
+                const isExpanded = expandedId === order._id;
                 const sc = STATUS_CONFIG[order.status] || STATUS_CONFIG.served;
                 const pc = PAY_CONFIG[order.paymentStatus] || PAY_CONFIG.unpaid;
 
                 return (
                   <>
                     <tr
-                      key={order.id}
+                      key={order._id}
                       className="hover:bg-gray-50 transition cursor-pointer"
-                      onClick={() => setExpandedId(isExpanded ? null : order.id)}
+                      onClick={() => setExpandedId(isExpanded ? null : order._id)}
                     >
                       <td className="px-4 py-3 text-xs font-mono text-gray-500">
                         {new Date(order.createdAt).toLocaleString()}
                       </td>
                       <td className="px-4 py-3 text-xs font-mono text-gray-500">
-                        {order.id.substring(0, 8)}…
+                        {order._id.substring(0, 8)}…
                       </td>
                       <td className="px-4 py-3 text-sm font-bold text-gray-900">
                         T{order.tableNumber}
@@ -466,7 +466,7 @@ export const OrdersPanel = ({ orders = [], onToast, onOrdersChange }) => {
 
                     {/* ── Expanded Detail Row ─────────────────────────── */}
                     {isExpanded && (
-                      <tr key={`${order.id}-detail`} className="bg-indigo-50">
+                      <tr key={`${order._id}-detail`} className="bg-indigo-50">
                         <td colSpan="8" className="px-4 py-4">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 

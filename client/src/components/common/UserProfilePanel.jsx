@@ -13,7 +13,7 @@ export const UserProfilePanel = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
 
   // Find full staff record (has avatarColor, email, password)
-  const staffRecord = staff.find(s => s.id === user?.id) || {};
+  const staffRecord = staff.find(s => s._id === user?._id) || {};
 
   const [tab, setTab] = useState('profile'); // 'profile' | 'password' | 'shift'
   const [form, setForm] = useState({ name: staffRecord.name || user?.name || '', email: staffRecord.email || '' });
@@ -23,9 +23,9 @@ export const UserProfilePanel = ({ isOpen, onClose }) => {
   const [profileMsg, setProfileMsg] = useState('');
 
   const ROLE_BADGE = {
-    cook:   { color: 'bg-orange-100 text-orange-700', icon: '👨‍🍳' },
-    waiter: { color: 'bg-blue-100 text-blue-700',   icon: '🧑‍💼' },
-    owner:  { color: 'bg-purple-100 text-purple-700', icon: '👔' },
+    cook: { color: 'bg-orange-100 text-orange-700', icon: '👨‍🍳' },
+    waiter: { color: 'bg-blue-100 text-blue-700', icon: '🧑‍💼' },
+    owner: { color: 'bg-purple-100 text-purple-700', icon: '👔' },
   };
   const badge = ROLE_BADGE[user?.role] || ROLE_BADGE.waiter;
 
@@ -99,17 +99,17 @@ export const UserProfilePanel = ({ isOpen, onClose }) => {
             <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${badge.color}`}>
               {badge.icon} {user?.role}
             </span>
-            <span className="text-xs text-gray-400">ID: {user?.id?.slice(-6)}</span>
+            <span className="text-xs text-gray-400">ID: {user?._id?.slice(-6)}</span>
           </div>
         </div>
 
         {/* Tab Switcher */}
         <div className="flex border-b border-gray-200 flex-shrink-0">
-          {[['profile', '👤', 'Profile'], ['password', '🔑', 'Password'], ['shift', '⏱️', 'Shift']].map(([id, icon, label]) => (
+          {[['profile', '👤', 'Profile'], ['password', '🔑', 'Password'], ['shift', '⏱️', 'Shift']].map(([_id, icon, label]) => (
             <button
-              key={id}
-              onClick={() => setTab(id)}
-              className={`flex-1 py-3 text-xs font-bold flex flex-col items-center gap-0.5 transition border-b-2 ${tab === id ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+              key={_id}
+              onClick={() => setTab(_id)}
+              className={`flex-1 py-3 text-xs font-bold flex flex-col items-center gap-0.5 transition border-b-2 ${tab === _id ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
             >
               <span>{icon}</span>{label}
             </button>
@@ -146,7 +146,7 @@ export const UserProfilePanel = ({ isOpen, onClose }) => {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Staff ID</span>
-                  <span className="font-mono text-gray-700">{user?.id}</span>
+                  <span className="font-mono text-gray-700">{user?._id}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Restaurant</span>
@@ -175,7 +175,7 @@ export const UserProfilePanel = ({ isOpen, onClose }) => {
               </div>
               {[
                 { key: 'current', label: 'Current Password' },
-                { key: 'next',    label: 'New Password' },
+                { key: 'next', label: 'New Password' },
                 { key: 'confirm', label: 'Confirm New Password' },
               ].map(({ key, label }) => (
                 <div key={key}>

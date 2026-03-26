@@ -23,14 +23,13 @@ export const CategoryTabs = ({ categories, selectedCategoryId, onCategorySelect 
       >
         {categories.map(category => (
           <button
-            key={category.id}
-            data-active={category.id === selectedCategoryId}
-            onClick={() => onCategorySelect(category.id)}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-semibold whitespace-nowrap text-sm transition-all duration-200 border ${
-              category.id === selectedCategoryId
+            key={category._id}
+            data-active={category._id === selectedCategoryId}
+            onClick={() => onCategorySelect(category._id)}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-semibold whitespace-nowrap text-sm transition-all duration-200 border ${category._id === selectedCategoryId
                 ? 'bg-amber-600 text-white border-amber-600 shadow-md shadow-amber-200'
                 : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-amber-50 hover:border-amber-300 hover:text-amber-700'
-            }`}
+              }`}
           >
             <span className="text-base leading-none">{category.icon}</span>
             <span>{category.name}</span>

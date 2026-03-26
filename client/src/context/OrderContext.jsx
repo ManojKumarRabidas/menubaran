@@ -37,7 +37,7 @@ const orderReducer = (state, action) => {
       return {
         ...state,
         kitchenOrders: state.kitchenOrders.map(order =>
-          order.id === action.payload.id ? action.payload : order
+          order._id === action.payload._id ? action.payload : order
         )
       };
     }
@@ -50,7 +50,7 @@ const orderReducer = (state, action) => {
       return {
         ...state,
         waiterOrders: state.waiterOrders.map(order =>
-          order.id === action.payload.id ? action.payload : order
+          order._id === action.payload._id ? action.payload : order
         )
       };
     }

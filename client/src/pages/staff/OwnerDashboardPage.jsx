@@ -20,13 +20,13 @@ import {
 import { restaurants, menuCategories } from '../../data/data.js';
 
 const NAV_ITEMS = [
-  { id: 'overview', icon: '📊', label: 'Overview' },
-  { id: 'menu', icon: '🍽️', label: 'Menu Editor' },
-  { id: 'tables', icon: '🪑', label: 'Tables' },
-  { id: 'orders', icon: '📋', label: 'Orders' },
-  { id: 'payments', icon: '💳', label: 'Payments' },
-  { id: 'account', icon: '👤', label: 'Account' },
-  { id: 'settings', icon: '⚙️', label: 'Settings' },
+  { _id: 'overview', icon: '📊', label: 'Overview' },
+  { _id: 'menu', icon: '🍽️', label: 'Menu Editor' },
+  { _id: 'tables', icon: '🪑', label: 'Tables' },
+  { _id: 'orders', icon: '📋', label: 'Orders' },
+  { _id: 'payments', icon: '💳', label: 'Payments' },
+  { _id: 'account', icon: '👤', label: 'Account' },
+  { _id: 'settings', icon: '⚙️', label: 'Settings' },
 ];
 
 export default function OwnerDashboardPage() {
@@ -41,10 +41,10 @@ export default function OwnerDashboardPage() {
   const [tables, setTables] = useState([]);
   const [orders, setOrders] = useState([]);
   const [weeklyRevenue, setWeeklyRevenue] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const [toast, setToast] = useState({ msg: '', type: '' });
-  const [restaurant, setRestaurant] = useState(null);
+  const [restaurant, setRestaurant] = useState({});
 
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type });
@@ -54,19 +54,15 @@ export default function OwnerDashboardPage() {
 
   const load = async () => {
     try {
-      console.log('[Debug] user?.restaurantId:', user?.restaurantId);
-      console.log('[Debug] restaurant?.slug:', restaurant?.slug);
 
       const [statsRes, menuRes, catRes, tablesRes, ordersRes, weekRes] = await Promise.all([
         getOwnerStats(user?.restaurantId).catch(e => { console.error('[FAIL] getOwnerStats:', e); return null; }),
-        getMenuByRestaurant(restaurant?.slug).catch(e => { console.error('[FAIL] getMenuByRestaurant:', e); return null; }),
-        getCategoriesByRestaurant(restaurant?.slug).catch(e => { console.error('[FAIL] getCategoriesByRestaurant:', e); return null; }),
+        getMenuByRestaurant(user?.restaurantId).catch(e => { console.error('[FAIL] getMenuByRestaurant:', e); return null; }),
+        getCategoriesByRestaurant(user?.restaurantId).catch(e => { console.error('[FAIL] getCategoriesByRestaurant:', e); return null; }),
         getTablesByRestaurant(user?.restaurantId).catch(e => { console.error('[FAIL] getTablesByRestaurant:', e); return null; }),
         getOrdersByRestaurant(user?.restaurantId).catch(e => { console.error('[FAIL] getOrdersByRestaurant:', e); return null; }),
         getWeeklyRevenue(user?.restaurantId).catch(e => { console.error('[FAIL] getWeeklyRevenue:', e); return null; }),
       ]);
-
-      console.log('[Debug] responses:', { statsRes, menuRes, catRes, tablesRes, ordersRes, weekRes });
 
       // Only set state if response is not null
       if (statsRes) setStats(statsRes.data);
@@ -77,7 +73,6 @@ export default function OwnerDashboardPage() {
       if (weekRes) setWeeklyRevenue(weekRes.data);
 
     } catch (e) {
-      console.error('[Debug] Outer catch:', e);
       showToast('Failed to load dashboard data', 'error');
     } finally {
       setLoading(false); // Now ALWAYS fires even if a call fails
@@ -85,27 +80,16 @@ export default function OwnerDashboardPage() {
   };
 
   const fetchRestaurant = async () => {
-    let getRestaurant = await getRestaurantById(user?.restaurantId)?.data || null;
-    if (getRestaurant) {
+    let getRestaurant = await getRestaurantById(user?.restaurantId) || null;
+    if (getRestaurant && getRestaurant.data) {
       setRestaurant(getRestaurant);
-      console.log('[Debug] Fetched restaurant:', getRestaurant);
-    } else {
-      console.warn('[Debug] No restaurant found for ID:', user?.restaurantId);
+      if (user?.restaurantId && getRestaurant?.data?.slug) {
+        load();
+      }
     }
   };
   useEffect(() => {
     fetchRestaurant();
-    console.log('[Effect] Fired');
-    console.log('[Effect] user:', user);
-    console.log('[Effect] restaurant:', restaurant);
-    console.log('[Effect] restaurantId:', user?.restaurantId);
-    console.log('[Effect] slug:', restaurant?.slug);
-    if (user?.restaurantId && restaurant?.slug) {
-      console.log('[Effect] Condition passed — calling load()');
-      load();
-    } else {
-      console.log('[Effect] Condition FAILED — load() skipped');
-    }
   }, [user?.restaurantId, user]);
 
   // Donut chart: revenue segments by category
@@ -113,8 +97,8 @@ export default function OwnerDashboardPage() {
     const catRevenue = {};
     orders.forEach(o => {
       o.items.forEach(item => {
-        const mi = menuItems.find(m => m.id === item.menuItemId);
-        const cat = categories.find(c => c.id === mi?.categoryId);
+        const mi = menuItems.find(m => m._id === item.menuItemId);
+        const cat = categories.find(c => c._id === mi?.categoryId);
         const label = cat ? `${cat.icon} ${cat.name}` : 'Other';
         catRevenue[label] = (catRevenue[label] || 0) + item.price * item.qty;
       });
@@ -164,12 +148,12 @@ export default function OwnerDashboardPage() {
           {/* Nav Items */}
           <nav className="flex-1 py-4 space-y-1 px-2 overflow-y-auto">
             {NAV_ITEMS.map(item => {
-              const isActive = activeTab === item.id;
-              const badge = item.id === 'payments' && pendingPayCount > 0 ? pendingPayCount : null;
+              const isActive = activeTab === item._id;
+              const badge = item._id === 'payments' && pendingPayCount > 0 ? pendingPayCount : null;
               return (
                 <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
+                  key={item._id}
+                  onClick={() => setActiveTab(item._id)}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group relative ${isActive ? 'bg-indigo-600 shadow-md' : 'hover:bg-gray-700'
                     }`}
                 >
@@ -208,8 +192,8 @@ export default function OwnerDashboardPage() {
           <header className="sticky top-0 z-20 bg-white border-b border-gray-200 shadow-sm px-6 py-3 flex items-center justify-between">
             <div>
               <h1 className="text-xl font-extrabold text-gray-900">
-                {NAV_ITEMS.find(n => n.id === activeTab)?.icon}{' '}
-                {NAV_ITEMS.find(n => n.id === activeTab)?.label}
+                {NAV_ITEMS.find(n => n._id === activeTab)?.icon}{' '}
+                {NAV_ITEMS.find(n => n._id === activeTab)?.label}
               </h1>
               <p className="text-xs text-gray-500">{restaurant?.name} • Owner Dashboard</p>
             </div>
@@ -240,7 +224,7 @@ export default function OwnerDashboardPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <SalesCard
                     icon="💰" label="Today's Revenue"
-                    value={`$${stats?.todayRevenue?.toFixed(2) || '0.00'}`}
+                    value={`₹${stats?.todayRevenue?.toFixed(2) || '0.00'}`}
                     gradient="from-indigo-500 to-purple-600"
                     trend={12} trendLabel="vs yesterday"
                   />
@@ -252,7 +236,7 @@ export default function OwnerDashboardPage() {
                   />
                   <SalesCard
                     icon="💵" label="Avg Order Value"
-                    value={`$${stats?.avgOrderValue?.toFixed(2) || '0.00'}`}
+                    value={`₹${stats?.avgOrderValue?.toFixed(2) || '0.00'}`}
                     gradient="from-amber-400 to-orange-500"
                     trend={-3} trendLabel="vs last week"
                   />
@@ -293,13 +277,13 @@ export default function OwnerDashboardPage() {
                           served: 'bg-gray-100 text-gray-600',
                         }[order.status] || 'bg-gray-100 text-gray-600';
                         return (
-                          <div key={order.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                          <div key={order._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
                             <div className="flex items-center gap-3">
                               <span className="font-extrabold text-gray-900 text-sm">T{order.tableNumber}</span>
                               <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${statusColor}`}>{order.status}</span>
                             </div>
                             <div className="text-right">
-                              <p className="text-sm font-extrabold text-indigo-600">${order.totalAmount.toFixed(2)}</p>
+                              <p className="text-sm font-extrabold text-indigo-600">₹{order.totalAmount.toFixed(2)}</p>
                               <p className="text-xs text-gray-400">{order.items.length} item{order.items.length !== 1 ? 's' : ''}</p>
                             </div>
                           </div>

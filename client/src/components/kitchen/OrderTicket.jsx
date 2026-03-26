@@ -33,9 +33,8 @@ export const OrderTicket = ({ order, onStartCooking, onMarkReady }) => {
 
   return (
     <div
-      className={`bg-gray-800 text-white p-4 rounded-lg transition-all duration-500 transform ${
-        isAnimatingIn ? 'translate-y-0 opacity-100' : '-translate-y-8 opacity-0'
-      } ${borderColorClass}`}
+      className={`bg-gray-800 text-white p-4 rounded-lg transition-all duration-500 transform ${isAnimatingIn ? 'translate-y-0 opacity-100' : '-translate-y-8 opacity-0'
+        } ${borderColorClass}`}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
@@ -74,7 +73,7 @@ export const OrderTicket = ({ order, onStartCooking, onMarkReady }) => {
       <div className="flex gap-2">
         {order.status === 'pending' && (
           <button
-            onClick={() => onStartCooking(order.id)}
+            onClick={() => onStartCooking(order._id)}
             className="flex-1 bg-blue-600 hover:bg-blue-700 font-bold py-2 rounded transition-colors duration-200"
           >
             Start Cooking
@@ -82,7 +81,7 @@ export const OrderTicket = ({ order, onStartCooking, onMarkReady }) => {
         )}
         {order.status === 'cooking' && (
           <button
-            onClick={() => onMarkReady(order.id)}
+            onClick={() => onMarkReady(order._id)}
             className="flex-1 bg-green-600 hover:bg-green-700 font-bold py-2 rounded transition-colors duration-200"
           >
             Mark Ready

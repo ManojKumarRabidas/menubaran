@@ -54,7 +54,7 @@ export const DonutChart = ({ segments = [] }) => {
               Total
             </text>
             <text x={cx} y={cy + 12} textAnchor="middle" fontSize="13" fontWeight="700" fill="#111827">
-              ${total.toFixed(0)}
+              ₹{total.toFixed(0)}
             </text>
           </svg>
         </div>

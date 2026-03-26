@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import Restaurant from '../models/Restaurant.js'
+import Restaurant from '../models/Restaurants.js'
 import MenuCategory from '../models/MenuCategory.js';
 import Staff from '../models/Staff.js';
 import Admin from '../models/Admin.js';
@@ -43,7 +43,7 @@ const ADMIN = {
 };
 
 const PLAN = {
-    id: 'plan_1',
+    _id: 'plan_1',
     name: 'Basic',
     price: 29,
     billingCycle: 'monthly',
@@ -58,7 +58,7 @@ export async function runSeed() {
     console.log('[Seed] Starting...');
 
     // 1. Subscription Plan
-    if (await SubscriptionPlan.exists({ id: PLAN.id })) {
+    if (await SubscriptionPlan.exists({ _id: PLAN._id })) {
         skip('SubscriptionPlan');
     } else {
         await SubscriptionPlan.create(PLAN);

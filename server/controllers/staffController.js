@@ -21,8 +21,8 @@ const staffLogin = async (req, res) => {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
         console.log(authUser.restaurantId)
-        const token = jwt.sign({ id: authUser._id, email: authUser.email }, process.env.JWT_SECRET, { expiresIn: '24h' });
-        res.json({ success: true, doc: { token, staff: { id: authUser._id, email: authUser.email, name: authUser.name, role: authUser.role, restaurantId: authUser.restaurantId } } });
+        const token = jwt.sign({ _id: authUser._id, email: authUser.email }, process.env.JWT_SECRET, { expiresIn: '24h' });
+        res.json({ success: true, doc: { token, staff: { _id: authUser._id, email: authUser.email, name: authUser.name, role: authUser.role, restaurantId: authUser.restaurantId } } });
     } catch (error) {
         res.status(500).json({ error: 'Internal server error' });
     }

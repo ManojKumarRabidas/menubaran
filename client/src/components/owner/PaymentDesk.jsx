@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { processPayment } from '../../services/api.js';
 
 const PAYMENT_METHODS = [
-  { id: 'cash', label: 'Cash', icon: '💵' },
-  { id: 'card', label: 'Card', icon: '💳' },
-  { id: 'upi', label: 'UPI', icon: '📱' },
+  { _id: 'cash', label: 'Cash', icon: '💵' },
+  { _id: 'card', label: 'Card', icon: '💳' },
+  { _id: 'upi', label: 'UPI', icon: '📱' },
 ];
 
 /**
@@ -32,10 +32,10 @@ export const PaymentDesk = ({ orders = [], onToast, onOrdersChange }) => {
     setProcessing(true);
     await new Promise(r => setTimeout(r, 900)); // simulate processing delay
     const tipAmt = parseFloat(tip) || 0;
-    await processPayment(selectedOrder.id, method, tipAmt);
+    await processPayment(selectedOrder._id, method, tipAmt);
     const totalWithTip = selectedOrder.totalAmount + tipAmt;
     setReceipt({ order: selectedOrder, method, tip: tipAmt, total: totalWithTip });
-    onOrdersChange(prev => prev.map(o => o.id === selectedOrder.id
+    onOrdersChange(prev => prev.map(o => o._id === selectedOrder._id
       ? { ...o, paymentStatus: 'paid', paymentMethod: method, tipAmount: tipAmt, status: 'paid' }
       : o
     ));
@@ -63,14 +63,14 @@ export const PaymentDesk = ({ orders = [], onToast, onOrdersChange }) => {
           </div>
         ) : (
           unpaidOrders.map(order => (
-            <div key={order.id} className="bg-white rounded-2xl shadow-md p-5 border-l-4 border-amber-400">
+            <div key={order._id} className="bg-white rounded-2xl shadow-md p-5 border-l-4 border-amber-400">
               <div className="flex items-start justify-between">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-extrabold text-gray-900 text-lg">Table {order.tableNumber}</span>
                     <span className="text-xs font-bold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full capitalize">{order.status}</span>
                   </div>
-                  <p className="text-xs text-gray-500 font-mono">{order.id.substring(0, 12)}…</p>
+                  <p className="text-xs text-gray-500 font-mono">{order._id.substring(0, 12)}…</p>
                   <div className="mt-2 space-y-0.5">
                     {order.items.map((item, i) => (
                       <p key={i} className="text-sm text-gray-600">• {item.name} × {item.qty} — ₹{(item.price * item.qty).toFixed(2)}</p>
@@ -111,7 +111,7 @@ export const PaymentDesk = ({ orders = [], onToast, onOrdersChange }) => {
           ) : (
             <div className="space-y-2 max-h-96 overflow-y-auto">
               {paidOrders.slice().reverse().map(order => (
-                <div key={order.id} className="flex items-center justify-between p-2.5 bg-emerald-50 rounded-xl">
+                <div key={order._id} className="flex items-center justify-between p-2.5 bg-emerald-50 rounded-xl">
                   <div>
                     <p className="text-sm font-bold text-gray-900">Table {order.tableNumber}</p>
                     <p className="text-xs text-gray-500 capitalize">₹{order.paymentMethod || 'cash'} {order.tipAmount > 0 ? `• +₹${order.tipAmount?.toFixed(2)} tip` : ''}</p>
@@ -181,9 +181,9 @@ export const PaymentDesk = ({ orders = [], onToast, onOrdersChange }) => {
                 <div className="grid grid-cols-3 gap-2">
                   {PAYMENT_METHODS.map(m => (
                     <button
-                      key={m.id}
-                      onClick={() => setMethod(m.id)}
-                      className={`py-3 rounded-xl text-sm font-bold transition flex flex-col items-center gap-1 ${method === m.id ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                      key={m._id}
+                      onClick={() => setMethod(m._id)}
+                      className={`py-3 rounded-xl text-sm font-bold transition flex flex-col items-center gap-1 ${method === m._id ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                     >
                       <span className="text-2xl">{m.icon}</span>
                       {m.label}

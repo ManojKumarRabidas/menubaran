@@ -63,7 +63,7 @@ export default function MenuPage() {
         }
 
         if (categoriesRes.data.length > 0) {
-          setSelectedCategoryId(categoriesRes.data[0].id);
+          setSelectedCategoryId(categoriesRes.data[0]._id);
         }
       } catch (err) {
         console.error('Failed to load menu data:', err);
@@ -88,7 +88,7 @@ export default function MenuPage() {
 
   const handleAddToCart = (item, qty) => {
     for (let i = 0; i < qty; i++) {
-      addItem(item.id, item.name, item.price, 1);
+      addItem(item._id, item.name, item.price, 1);
     }
     showToast(`${item.name} added to cart!`, 'success');
   };
@@ -150,11 +150,10 @@ export default function MenuPage() {
       {/* Toast Notification */}
       {toast && (
         <div
-          className={`fixed top-5 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl shadow-xl text-sm font-semibold flex items-center gap-2 transition-all duration-300 ${
-            toast.type === 'success'
-              ? 'bg-green-600 text-white'
-              : 'bg-blue-600 text-white'
-          }`}
+          className={`fixed top-5 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl shadow-xl text-sm font-semibold flex items-center gap-2 transition-all duration-300 ${toast.type === 'success'
+            ? 'bg-green-600 text-white'
+            : 'bg-blue-600 text-white'
+            }`}
         >
           {toast.message}
         </div>
@@ -170,7 +169,7 @@ export default function MenuPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
               {filteredItems.map(item => (
                 <MenuItemCard
-                  key={item.id}
+                  key={item._id}
                   item={item}
                   onAddClick={handleAddItem}
                 />

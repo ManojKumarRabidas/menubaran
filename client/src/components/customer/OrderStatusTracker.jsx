@@ -3,10 +3,10 @@
  */
 export const OrderStatusTracker = ({ order }) => {
   const steps = [
-    { id: 'pending', label: 'Placed', icon: '📋' },
-    { id: 'cooking', label: 'Cooking', icon: '🔥' },
-    { id: 'ready', label: 'Ready', icon: '🍽️' },
-    { id: 'served', label: 'Served', icon: '😊' }
+    { _id: 'pending', label: 'Placed', icon: '📋' },
+    { _id: 'cooking', label: 'Cooking', icon: '🔥' },
+    { _id: 'ready', label: 'Ready', icon: '🍽️' },
+    { _id: 'served', label: 'Served', icon: '😊' }
   ];
 
   const getStepTimestamp = (stepId) => {
@@ -16,7 +16,7 @@ export const OrderStatusTracker = ({ order }) => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  const currentStepIndex = steps.findIndex(s => s.id === order.status);
+  const currentStepIndex = steps.findIndex(s => s._id === order.status);
   const isComplete = (stepIndex) => stepIndex <= currentStepIndex;
 
   return (
@@ -25,25 +25,23 @@ export const OrderStatusTracker = ({ order }) => {
 
       <div className="space-y-4">
         {steps.map((step, index) => (
-          <div key={step.id} className="flex gap-4">
+          <div key={step._id} className="flex gap-4">
             {/* Step Indicator */}
             <div className="flex flex-col items-center">
               <div
-                className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg transition-all duration-200 ${
-                  isComplete(index)
+                className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg transition-all duration-200 ${isComplete(index)
                     ? 'bg-green-500 text-white scale-110'
                     : index === currentStepIndex
-                    ? 'bg-amber-500 text-white animate-pulse'
-                    : 'bg-gray-200 text-gray-500'
-                }`}
+                      ? 'bg-amber-500 text-white animate-pulse'
+                      : 'bg-gray-200 text-gray-500'
+                  }`}
               >
                 {isComplete(index) ? '✓' : step.icon}
               </div>
               {index < steps.length - 1 && (
                 <div
-                  className={`w-1 h-8 mt-1 ${
-                    isComplete(index + 1) ? 'bg-green-500' : 'bg-gray-300'
-                  }`}
+                  className={`w-1 h-8 mt-1 ${isComplete(index + 1) ? 'bg-green-500' : 'bg-gray-300'
+                    }`}
                 ></div>
               )}
             </div>
@@ -51,8 +49,8 @@ export const OrderStatusTracker = ({ order }) => {
             {/* Step Content */}
             <div className="flex-1 pt-1">
               <h3 className="font-semibold text-gray-900">{step.label}</h3>
-              {getStepTimestamp(step.id) && (
-                <p className="text-sm text-gray-500">{getStepTimestamp(step.id)}</p>
+              {getStepTimestamp(step._id) && (
+                <p className="text-sm text-gray-500">{getStepTimestamp(step._id)}</p>
               )}
             </div>
           </div>

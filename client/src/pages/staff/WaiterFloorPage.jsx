@@ -74,7 +74,7 @@ export default function WaiterFloorPage() {
       if (data.restaurantId === user?.restaurantId) {
         const notification = {
           type: data.newStatus === 'ready' ? 'ready' : 'order',
-          message: data.newStatus === 'ready' 
+          message: data.newStatus === 'ready'
             ? `Order ready for pickup — Table ${data.tableNumber}`
             : `Order status updated — Table ${data.tableNumber}`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -197,21 +197,19 @@ export default function WaiterFloorPage() {
           <div className="bg-white border-b border-gray-200 flex gap-2 px-4 py-2">
             <button
               onClick={() => setActiveTab('tables')}
-              className={`flex-1 px-4 py-2 rounded font-semibold transition ${
-                activeTab === 'tables'
+              className={`flex-1 px-4 py-2 rounded font-semibold transition ${activeTab === 'tables'
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-100 text-gray-700'
-              }`}
+                }`}
             >
               Tables ({tables.length})
             </button>
             <button
               onClick={() => setActiveTab('notifications')}
-              className={`flex-1 px-4 py-2 rounded font-semibold transition relative ${
-                activeTab === 'notifications'
+              className={`flex-1 px-4 py-2 rounded font-semibold transition relative ${activeTab === 'notifications'
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-100 text-gray-700'
-              }`}
+                }`}
             >
               Notifications
               {notifications.length > 0 && (
@@ -232,9 +230,9 @@ export default function WaiterFloorPage() {
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {tables.map(table => (
                   <TableCard
-                    key={table.id}
+                    key={table._id}
                     table={table}
-                    order={getOrderForTable(table.id)}
+                    order={getOrderForTable(table._id)}
                     onTableClick={handleTableClick}
                   />
                 ))}
@@ -266,17 +264,17 @@ export default function WaiterFloorPage() {
               </div>
 
               <div className="p-6">
-                {getOrderForTable(selectedTable.id) ? (
+                {getOrderForTable(selectedTable._id) ? (
                   <div>
                     <div className="mb-6 p-3 bg-blue-50 rounded-lg">
                       <p className="text-sm font-semibold text-blue-900">
-                        Status: <span className="capitalize">{getOrderForTable(selectedTable.id)?.status}</span>
+                        Status: <span className="capitalize">{getOrderForTable(selectedTable._id)?.status}</span>
                       </p>
                     </div>
 
                     <h3 className="font-bold text-gray-900 mb-3">Items:</h3>
                     <div className="space-y-2 mb-6">
-                      {getOrderForTable(selectedTable.id)?.items.map((item, idx) => (
+                      {getOrderForTable(selectedTable._id)?.items.map((item, idx) => (
                         <div key={idx} className="p-2 bg-gray-50 rounded">
                           <p className="font-semibold text-gray-900">×{item.qty} {item.name}</p>
                           {item.note && <p className="text-xs text-gray-600 italic">{item.note}</p>}
@@ -286,7 +284,7 @@ export default function WaiterFloorPage() {
 
                     <div className="border-t border-gray-200 pt-4">
                       <p className="text-lg font-bold text-orange-600">
-                        Total: ${getOrderForTable(selectedTable.id)?.totalAmount.toFixed(2)}
+                        Total: ${getOrderForTable(selectedTable._id)?.totalAmount.toFixed(2)}
                       </p>
                     </div>
                   </div>

@@ -111,6 +111,9 @@ export default function LoginPage({ isAdmin = false }) {
               {loading ? <LoadingSpinner size="sm" /> : '→'}
               {loading ? 'Logging in...' : 'Login'}
             </button>
+            <span onClick={() => navigate('/')} className="py-5 text-center text-indigo-600 hover:text-indigo-800 text-sm font-medium" style={{ textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", padding: "0", cursor: "pointer" }}>
+              ← Back to Home
+            </span>
           </form>
 
           {/* Demo Credentials */}

@@ -22,21 +22,21 @@ export const TablesManager = ({ tables = [], orders = [], restaurantId, onToast,
 
   const getOrderForTable = (tableId) => orders.find(o => o.tableId === tableId && o.status !== 'paid');
 
-  const startEdit = (table) => { setEditingId(table.id); setEditNumber(String(table.number)); };
+  const startEdit = (table) => { setEditingId(table._id); setEditNumber(String(table.number)); };
   const cancelEdit = () => { setEditingId(null); setEditNumber(''); };
 
   const saveEdit = async (table) => {
     const num = parseInt(editNumber);
     if (!num || num <= 0) { onToast?.('Enter a valid table number', 'error'); return; }
-    await updateTable(table.id, { number: num });
-    onTablesChange(prev => prev.map(t => t.id === table.id ? { ...t, number: num } : t));
+    await updateTable(table._id, { number: num });
+    onTablesChange(prev => prev.map(t => t._id === table._id ? { ...t, number: num } : t));
     onToast?.(`Table renamed to Table ${num}`, 'success');
     cancelEdit();
   };
 
   const freeTable = async (table) => {
-    await updateTable(table.id, { status: 'free', currentOrderId: null });
-    onTablesChange(prev => prev.map(t => t.id === table.id ? { ...t, status: 'free', currentOrderId: null } : t));
+    await updateTable(table._id, { status: 'free', currentOrderId: null });
+    onTablesChange(prev => prev.map(t => t._id === table._id ? { ...t, status: 'free', currentOrderId: null } : t));
     onToast?.(`Table ${table.number} marked as free`, 'info');
   };
 
@@ -52,7 +52,11 @@ export const TablesManager = ({ tables = [], orders = [], restaurantId, onToast,
   const handleGenerateQR = (e, table) => {
     e.stopPropagation();
     // Navigate to printable QR page; restaurantId comes from parent prop
-    navigate(`/qr/${restaurantId}/${table.id}`);
+    // console.log("Generating QR for table", table._id);
+    // console.log("Restaurant ID:", restaurantId);
+    // navigate(`/qr/${restaurantId}/${table._id}`);
+    const url = `/qr/${restaurantId}/${table._id}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -93,16 +97,16 @@ export const TablesManager = ({ tables = [], orders = [], restaurantId, onToast,
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
         {tables.map(table => {
           const style = STATUS_STYLES[table.status] || STATUS_STYLES.free;
-          const order = getOrderForTable(table.id);
-          const isExpanded = expandedId === table.id;
-          const isEditing = editingId === table.id;
+          const order = getOrderForTable(table._id);
+          const isExpanded = expandedId === table._id;
+          const isEditing = editingId === table._id;
 
           return (
-            <div key={table.id} className={`rounded-2xl border-2 ${style.bg} transition`}>
+            <div key={table._id} className={`rounded-2xl border-2 ${style.bg} transition`}>
               {/* Table Card */}
               <div
                 className="p-4 cursor-pointer select-none"
-                onClick={() => setExpandedId(isExpanded ? null : table.id)}
+                onClick={() => setExpandedId(isExpanded ? null : table._id)}
               >
                 <div className="text-3xl text-center mb-2">🪑</div>
                 {isEditing ? (

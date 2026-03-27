@@ -219,6 +219,7 @@ import {
 import {
   getOrderById,
   getOrdersByRestaurant,
+  getOrdersByTable,
   placeOrder,
   updateOrderStatus,
   processPayment,
@@ -254,6 +255,7 @@ router.patch('/tables/:_id', updateTable);
 
 // ── Orders ────────────────────────────────────────────────────────────────────
 router.get('/restaurants/:_id/orders', getOrdersByRestaurant);
+router.get('/tables/:tableId/orders', getOrdersByTable);
 router.get('/orders/:_id', getOrderById);
 router.post('/orders', placeOrder);
 router.patch('/orders/:_id/status', updateOrderStatus);

@@ -15,7 +15,7 @@ export default function CartPage() {
   const [toast, setToast] = useState('');
   const [instructions, setLocalInstructions] = useState(specialInstructions);
 
-  const { restaurantId = 'rest_1', tableId = 'table_1' } = location.state || {};
+  const { restaurantId = '', tableId = '', tableNumber = 1 } = location.state || {};
 
   const subtotal = getTotalAmount();
   const tax = subtotal * TAX_RATE;
@@ -31,8 +31,9 @@ export default function CartPage() {
     setLoading(true);
     try {
       const orderPayload = {
-        restaurantSlug: restaurantId, // restaurantId is the real DB ID; api resolves via ID
+        restaurantId,
         tableId,
+        tableNumber,
         items: items.map(item => ({
           menuItemId: item.menuItemId,
           name: item.name,
@@ -44,6 +45,7 @@ export default function CartPage() {
       };
 
       const response = await placeOrder(orderPayload);
+      if (!response.data) throw new Error('Order failed');
       setInstructions(instructions);
       clearCart();
       navigate(`/order/${response.data._id}?table=${tableId}&restaurant=${restaurantId}`);

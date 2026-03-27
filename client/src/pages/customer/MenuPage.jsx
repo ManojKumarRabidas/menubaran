@@ -39,7 +39,7 @@ export default function MenuPage() {
       try {
         const [restaurantRes, tableRes, categoriesRes, itemsRes] = await Promise.all([
           getRestaurantById(restaurantId),
-          getTableById(tableId),
+          getTableById(restaurantId, tableId),
           getCategoriesByRestaurantId(restaurantId),
           getMenuByRestaurantId(restaurantId),
         ]);
@@ -104,7 +104,7 @@ export default function MenuPage() {
   };
 
   const handleCartClick = () => {
-    navigate('/cart', { state: { restaurantId, tableId } });
+    navigate('/cart', { state: { restaurantId, tableId, tableNumber } });
   };
 
   const filteredItems = selectedCategoryId
@@ -191,13 +191,19 @@ export default function MenuPage() {
             onClick={handleRequestWater}
             className="flex-1 flex items-center justify-center gap-2 py-3 bg-blue-50 border border-blue-200 text-blue-700 rounded-xl font-semibold text-sm hover:bg-blue-100 active:scale-95 transition-all duration-150"
           >
-            💧 Request Water
+            💧 Water
           </button>
           <button
             onClick={handleCallWaiter}
             className="flex-1 flex items-center justify-center gap-2 py-3 bg-purple-50 border border-purple-200 text-purple-700 rounded-xl font-semibold text-sm hover:bg-purple-100 active:scale-95 transition-all duration-150"
           >
-            🔔 Call Waiter
+            🔔 Waiter
+          </button>
+          <button
+            onClick={() => navigate(`/order?table=${tableId}&restaurant=${restaurantId}`)}
+            className="flex-1 flex items-center justify-center gap-2 py-3 bg-amber-50 border border-amber-200 text-amber-700 rounded-xl font-semibold text-sm hover:bg-amber-100 active:scale-95 transition-all duration-150"
+          >
+            📋 My Orders
           </button>
         </div>
       </div>

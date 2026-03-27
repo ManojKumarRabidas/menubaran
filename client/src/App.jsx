@@ -38,7 +38,10 @@ function App() {
                   e.g. /menu/rest_1/table/table_3 */}
               <Route path="/menu/:restaurantId/table/:tableId" element={<MenuPage />} />
               <Route path="/cart" element={<CartPage />} />
+              {/* After placing an order: /order/:orderId?table=:tableId&restaurant=:restaurantId */}
               <Route path="/order/:orderId" element={<OrderTrackingPage />} />
+              {/* Table QR scan: /order?table=:tableId&restaurant=:restaurantId */}
+              <Route path="/order" element={<OrderTrackingPage />} />
 
               {/* Staff Routes */}
               <Route path="/staff/login" element={<LoginPage />} />

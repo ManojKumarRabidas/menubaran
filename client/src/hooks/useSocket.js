@@ -1,82 +1,79 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { io } from 'socket.io-client';
 
-// Module-level singleton EventBus
-// Persistent across component re-renders
-const eventBus = new Map();
+// ── Singleton socket instance ─────────────────────────────────────────────────
+// One connection shared across all components, created lazily on first use.
+let _socket = null;
+
+function getSocket() {
+  if (!_socket) {
+    const SERVER_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    _socket = io(SERVER_URL, {
+      autoConnect: true,
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000,
+      transports: ['websocket', 'polling'],
+    });
+
+    _socket.on('connect', () =>
+      console.log('[Socket] Connected:', _socket.id)
+    );
+    _socket.on('disconnect', (reason) =>
+      console.log('[Socket] Disconnected:', reason)
+    );
+    _socket.on('connect_error', (err) =>
+      console.warn('[Socket] Connection error:', err.message)
+    );
+  }
+  return _socket;
+}
 
 /**
- * Mock socket hook using EventBus pattern
- * Interface identical to socket.io-client for easy future swap
- * @returns {object} { on, emit, off }
+ * Returns the shared socket.io-client instance.
+ * Safe to call from any component — always returns the same socket.
  */
 export const useSocket = () => {
-  const socket = {
-    /**
-     * Register an event listener
-     * @param {string} eventName - Event name
-     * @param {function} callback - Callback function
-     */
-    on: (eventName, callback) => {
-      if (!eventBus.has(eventName)) {
-        eventBus.set(eventName, []);
-      }
-      eventBus.get(eventName).push(callback);
-    },
+  const socket = getSocket();
 
-    /**
-     * Remove an event listener
-     * @param {string} eventName - Event name
-     * @param {function} callback - Callback function to remove
-     */
-    off: (eventName, callback) => {
-      if (eventBus.has(eventName)) {
-        const callbacks = eventBus.get(eventName);
-        const index = callbacks.indexOf(callback);
-        if (index > -1) {
-          callbacks.splice(index, 1);
-        }
-      }
-    },
+  // No cleanup needed — singleton lives for the entire app session
+  useEffect(() => {}, []);
 
-    /**
-     * Emit an event
-     * @param {string} eventName - Event name
-     * @param {object} data - Event payload
-     */
-    emit: (eventName, data) => {
-      if (eventBus.has(eventName)) {
-        eventBus.get(eventName).forEach(callback => {
-          callback(data);
-        });
-      }
-    }
-  };
-
-  // Return cleanup function to prevent memory leaks
-  useEffect(() => {
-    return () => {
-      // Note: We don't clear eventBus here as other components may still need it
-      // In production, use a proper cleanup strategy
-    };
-  }, []);
-
-  return socket;
+  return { socket };
 };
 
 /**
- * Hook to simulate server-sent socket events
- * Wraps emit to add delay simulating network latency
+ * Convenience hook: { socket, emitWithDelay }
+ * emitWithDelay wraps socket.emit with an optional delay for UX smoothness.
  */
 export const useSocketEmit = () => {
-  const socket = useSocket();
+  const { socket } = useSocket();
 
   const emitWithDelay = (eventName, data, delayMs = 0) => {
-    setTimeout(() => {
+    if (delayMs > 0) {
+      setTimeout(() => socket.emit(eventName, data), delayMs);
+    } else {
       socket.emit(eventName, data);
-    }, delayMs);
+    }
   };
 
   return { socket, emitWithDelay };
+};
+
+/**
+ * Helper hook: subscribe to a socket event and auto-cleanup on unmount.
+ * Usage: useSocketOn('order:statusUpdate', (data) => { ... });
+ */
+export const useSocketOn = (eventName, handler) => {
+  const { socket } = useSocket();
+  const handlerRef = useRef(handler);
+  handlerRef.current = handler; // always latest handler without re-subscribing
+
+  useEffect(() => {
+    const fn = (...args) => handlerRef.current(...args);
+    socket.on(eventName, fn);
+    return () => socket.off(eventName, fn);
+  }, [socket, eventName]);
 };
 
 export default useSocket;

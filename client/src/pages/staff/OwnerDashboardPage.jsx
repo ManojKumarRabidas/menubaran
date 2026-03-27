@@ -32,8 +32,16 @@ const NAV_ITEMS = [
 export default function OwnerDashboardPage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTabState] = useState(
+    () => localStorage.getItem('dashboard_tab') || 'overview'
+  );
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // Persist active tab so refresh doesn't reset it
+  const setActiveTab = (tab) => {
+    localStorage.setItem('dashboard_tab', tab);
+    setActiveTabState(tab);
+  };
 
   const [stats, setStats] = useState(null);
   const [menuItems, setMenuItems] = useState([]);

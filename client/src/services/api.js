@@ -707,6 +707,16 @@ export const getOrdersByRestaurant = async (restaurantId) => {
   }
 };
 
+export const getOrdersByTable = async (tableId) => {
+  try {
+    if (!tableId) return { data: [] };
+    const res = await api(`/api/tables/${tableId}/orders`);
+    return { data: res.success ? res.docs : [] };
+  } catch {
+    return { data: [] };
+  }
+};
+
 export const updateOrderStatus = async (orderId, newStatus) => {
   try {
     const res = await api(`/api/orders/${orderId}/status`, {

@@ -25,6 +25,7 @@ import {
 } from '../controllers/tableController.js';
 import {
   getOrderById,
+  getTodaysOrdersByRestaurant,
   getOrdersByRestaurant,
   getOrdersByTable,
   placeOrder,
@@ -62,6 +63,7 @@ router.patch('/tables/:_id', updateTable);
 
 // ── Orders ────────────────────────────────────────────────────────────────────
 router.get('/restaurants/:_id/orders', getOrdersByRestaurant);
+router.get('/restaurants/:_id/orders/today', getTodaysOrdersByRestaurant);
 router.get('/tables/:tableId/orders', getOrdersByTable);
 router.get('/orders/:_id', getOrderById);
 router.post('/orders', placeOrder);

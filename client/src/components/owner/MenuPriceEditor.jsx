@@ -68,7 +68,7 @@ export const MenuPriceEditor = ({ items = [], onSavePrice, onToast }) => {
                       autoFocus
                     />
                   ) : (
-                    `$${item.price.toFixed(2)}`
+                    `₹${item.price.toFixed(2)}`
                   )}
                 </td>
                 <td className="px-6 py-4 text-sm space-x-2">

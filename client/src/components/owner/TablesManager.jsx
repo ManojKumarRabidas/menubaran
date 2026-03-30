@@ -51,10 +51,6 @@ export const TablesManager = ({ tables = [], orders = [], restaurantId, onToast,
 
   const handleGenerateQR = (e, table) => {
     e.stopPropagation();
-    // Navigate to printable QR page; restaurantId comes from parent prop
-    // console.log("Generating QR for table", table._id);
-    // console.log("Restaurant ID:", restaurantId);
-    // navigate(`/qr/${restaurantId}/${table._id}`);
     const url = `/qr/${restaurantId}/${table._id}`;
     window.open(url, '_blank', 'noopener,noreferrer');
   };

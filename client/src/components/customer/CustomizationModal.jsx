@@ -18,7 +18,7 @@ export const CustomizationModal = ({ item, isOpen, onClose, onAddToCart }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end md:items-center">
+    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
       {/* Overlay */}
       <div
         className="absolute inset-0 bg-black bg-opacity-50"
@@ -46,7 +46,7 @@ export const CustomizationModal = ({ item, isOpen, onClose, onAddToCart }) => {
               <span className="text-6xl opacity-50">🍽️</span>
             </div>
             <p className="text-gray-600 text-sm">{item.description}</p>
-            <p className="text-2xl font-bold text-orange-600 mt-2">${item.price.toFixed(2)}</p>
+            <p className="text-2xl font-bold text-orange-600 mt-2">₹{item.price.toFixed(2)}</p>
           </div>
 
           {/* Quantity Stepper */}

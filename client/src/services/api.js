@@ -190,6 +190,16 @@ export const getOrdersByRestaurant = async (restaurantId) => {
   }
 };
 
+export const getTodaysOrdersByRestaurant = async (restaurantId) => {
+  try {
+    if (!restaurantId) return { data: [] };
+    const res = await api(`/api/restaurants/${restaurantId}/orders/today`);
+    return { data: res.success ? res.docs : [] };
+  } catch {
+    return { data: [] };
+  }
+};
+
 export const getOrdersByTable = async (tableId) => {
   try {
     if (!tableId) return { data: [] };

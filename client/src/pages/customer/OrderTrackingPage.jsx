@@ -2,25 +2,25 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { OrderStatusTracker } from '../../components/customer/OrderStatusTracker.jsx';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner.jsx';
-import { useSocketEmit, useSocketOn } from '../../hooks/useSocket.js';
+import { useSocketEmit, useSocketOn, useSocket } from '../../hooks/useSocket.js';
 import { getOrderById, getOrdersByTable } from '../../services/api.js';
 
 // ── Status badge helper ───────────────────────────────────────────────────────
 const STATUS_STYLE = {
-  pending:   'bg-yellow-100 text-yellow-800 border-yellow-200',
-  cooking:   'bg-orange-100 text-orange-800 border-orange-200',
-  ready:     'bg-green-100  text-green-800  border-green-200',
-  served:    'bg-blue-100   text-blue-800   border-blue-200',
+  pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+  cooking: 'bg-orange-100 text-orange-800 border-orange-200',
+  ready: 'bg-green-100  text-green-800  border-green-200',
+  served: 'bg-blue-100   text-blue-800   border-blue-200',
   cancelled: 'bg-red-100    text-red-800    border-red-200',
-  paid:      'bg-gray-100   text-gray-600   border-gray-200',
+  paid: 'bg-gray-100   text-gray-600   border-gray-200',
 };
 const STATUS_LABEL = {
-  pending:   '⏳ Pending',
-  cooking:   '🔥 Cooking',
-  ready:     '✅ Ready',
-  served:    '🍽️ Served',
+  pending: '⏳ Pending',
+  cooking: '🔥 Cooking',
+  ready: '✅ Ready',
+  served: '🍽️ Served',
   cancelled: '❌ Cancelled',
-  paid:      '💳 Paid',
+  paid: '💳 Paid',
 };
 
 export default function OrderTrackingPage() {
@@ -31,18 +31,18 @@ export default function OrderTrackingPage() {
   const { emitWithDelay } = useSocketEmit();
 
   // Both modes share these from query-string
-  const tableId      = searchParams.get('table');
+  const tableId = searchParams.get('table');
   const restaurantId = searchParams.get('restaurant') || '';
 
   // ── Mode: single order ────────────────────────────────────────────────────
-  const [order, setOrder]     = useState(null);
+  const [order, setOrder] = useState(null);
 
   // ── Mode: table view (all active orders) ─────────────────────────────────
-  const [tableOrders, setTableOrders]   = useState([]);
-  const [activeIndex, setActiveIndex]   = useState(0);
+  const [tableOrders, setTableOrders] = useState([]);
+  const [activeIndex, setActiveIndex] = useState(0);
 
   const [loading, setLoading] = useState(true);
-  const [toast, setToast]     = useState('');
+  const [toast, setToast] = useState('');
 
   // Which mode are we in?
   const isTableView = !orderId && !!tableId;
@@ -73,7 +73,7 @@ export default function OrderTrackingPage() {
 
   useEffect(() => {
     if (isTableView) loadTableOrders();
-    else             loadSingleOrder();
+    else loadSingleOrder();
   }, [isTableView, loadSingleOrder, loadTableOrders]);
 
   // ── Socket: live status updates ───────────────────────────────────────────
@@ -168,11 +168,10 @@ export default function OrderTrackingPage() {
                 <button
                   key={o._id}
                   onClick={() => setActiveIndex(idx)}
-                  className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold border transition-all ${
-                    idx === activeIndex
-                      ? 'bg-amber-600 text-white border-amber-600'
-                      : 'bg-white text-gray-600 border-gray-200 hover:border-amber-300'
-                  }`}
+                  className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold border transition-all ${idx === activeIndex
+                    ? 'bg-amber-600 text-white border-amber-600'
+                    : 'bg-white text-gray-600 border-gray-200 hover:border-amber-300'
+                    }`}
                 >
                   Order {idx + 1}
                   <span className={`ml-2 text-xs px-2 py-0.5 rounded-full border ${STATUS_STYLE[o.status] || ''}`}>

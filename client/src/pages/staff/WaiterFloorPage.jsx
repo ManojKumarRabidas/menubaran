@@ -7,7 +7,7 @@ import { LoadingSpinner } from '../../components/common/LoadingSpinner.jsx';
 import { UserProfilePanel } from '../../components/common/UserProfilePanel.jsx';
 import { useAuth } from '../../hooks/useAuth.js';
 import { useSocket } from '../../hooks/useSocket.js';
-import { getTablesByRestaurant, getOrdersByRestaurant } from '../../services/api.js';
+import { getTablesByRestaurant, getTodaysOrdersByRestaurant } from '../../services/api.js';
 
 export default function WaiterFloorPage() {
   const { user, logout } = useAuth();
@@ -36,7 +36,7 @@ export default function WaiterFloorPage() {
     const loadData = async () => {
       try {
         const tablesRes = await getTablesByRestaurant(user?.restaurantId);
-        const ordersRes = await getOrdersByRestaurant(user?.restaurantId);
+        const ordersRes = await getTodaysOrdersByRestaurant(user?.restaurantId);
         setTables(tablesRes.data || []);
         setOrders(ordersRes.data || []);
         setLoading(false);
@@ -198,8 +198,8 @@ export default function WaiterFloorPage() {
             <button
               onClick={() => setActiveTab('tables')}
               className={`flex-1 px-4 py-2 rounded font-semibold transition ${activeTab === 'tables'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700'
                 }`}
             >
               Tables ({tables.length})
@@ -207,8 +207,8 @@ export default function WaiterFloorPage() {
             <button
               onClick={() => setActiveTab('notifications')}
               className={`flex-1 px-4 py-2 rounded font-semibold transition relative ${activeTab === 'notifications'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700'
                 }`}
             >
               Notifications
@@ -284,7 +284,7 @@ export default function WaiterFloorPage() {
 
                     <div className="border-t border-gray-200 pt-4">
                       <p className="text-lg font-bold text-orange-600">
-                        Total: ${getOrderForTable(selectedTable._id)?.totalAmount.toFixed(2)}
+                        Total: ₹{getOrderForTable(selectedTable._id)?.totalAmount.toFixed(2)}
                       </p>
                     </div>
                   </div>

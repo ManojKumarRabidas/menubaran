@@ -7,9 +7,16 @@ import { LoadingSpinner } from '../../components/common/LoadingSpinner.jsx';
 import { UserProfilePanel } from '../../components/common/UserProfilePanel.jsx';
 import { useAuth } from '../../hooks/useAuth.js';
 import { useSocket } from '../../hooks/useSocket.js';
-import { getOrdersByRestaurant, updateOrderStatus } from '../../services/api.js';
+import { getTodaysOrdersByRestaurant, updateOrderStatus } from '../../services/api.js';
 
 const FILTER_OPTIONS = ['all', 'pending', 'cooking', 'ready'];
+
+const FILTER_STYLES = {
+  all: 'bg-indigo-600 text-white shadow-md',
+  pending: 'bg-amber-500 text-white shadow-md',
+  cooking: 'bg-blue-500 text-white shadow-md',
+  ready: 'bg-emerald-500 text-white shadow-md',
+};
 
 export default function KitchenDisplayPage() {
   const { user, logout } = useAuth();
@@ -26,84 +33,57 @@ export default function KitchenDisplayPage() {
   useEffect(() => {
     const loadOrders = async () => {
       try {
-        const response = await getOrdersByRestaurant(user?.restaurantId);
+        const response = await getTodaysOrdersByRestaurant(user?.restaurantId);
         setOrders(response.data || []);
-        setLoading(false);
       } catch (err) {
+        // silent
+      } finally {
         setLoading(false);
       }
     };
-
     loadOrders();
   }, [user?.restaurantId]);
 
-  // Listen for new orders
   useEffect(() => {
     const handleNewOrder = (data) => {
-      if (data.restaurantId === user?.restaurantId) {
-        // Add new order to the top
-        setOrders(prev => [data.order, ...prev]);
-        setAlertOrder(data.order);
-        setShowAlert(true);
-
-        // Play ding sound using Web Audio API
-        try {
-          const ctx = new (window.AudioContext || window.webkitAudioContext)();
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.frequency.value = 880;
-          osc.type = 'sine';
-          gain.gain.setValueAtTime(0.3, ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
-          osc.start(ctx.currentTime);
-          osc.stop(ctx.currentTime + 0.3);
-        } catch (e) {
-          console.log('Audio not supported');
-        }
-      }
+      if (data.restaurantId !== user?.restaurantId) return;
+      setOrders(prev => [data.order, ...prev]);
+      setAlertOrder(data.order);
+      setShowAlert(true);
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = 880;
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.3);
+      } catch (e) { }
     };
-
     socket?.on('order:new', handleNewOrder);
-    return () => {
-      socket?.off('order:new', handleNewOrder);
-    };
+    return () => socket?.off('order:new', handleNewOrder);
   }, [user?.restaurantId, socket]);
 
-  // Listen for order status updates
   useEffect(() => {
     const handleStatusUpdate = (data) => {
-      if (data.restaurantId === user?.restaurantId) {
-        setOrders(prev =>
-          prev.map(order =>
-            order._id === data.orderId
-              ? { ...order, status: data.newStatus }
-              : order
-          )
-        );
-      }
+      if (data.restaurantId !== user?.restaurantId) return;
+      setOrders(prev =>
+        prev.map(o => o._id === data.orderId ? { ...o, status: data.newStatus } : o)
+      );
     };
-
     socket?.on('order:statusUpdate', handleStatusUpdate);
-    return () => {
-      socket?.off('order:statusUpdate', handleStatusUpdate);
-    };
+    return () => socket?.off('order:statusUpdate', handleStatusUpdate);
   }, [user?.restaurantId, socket]);
 
   const handleStartCooking = async (orderId) => {
     try {
       await updateOrderStatus(orderId, 'cooking');
-      setOrders(prev =>
-        prev.map(order =>
-          order._id === orderId ? { ...order, status: 'cooking' } : order
-        )
-      );
-      socket?.emit('order:statusUpdate', {
-        orderId,
-        newStatus: 'cooking',
-        restaurantId: user?.restaurantId
-      });
+      setOrders(prev => prev.map(o => o._id === orderId ? { ...o, status: 'cooking' } : o));
+      socket?.emit('order:statusUpdate', { orderId, newStatus: 'cooking', restaurantId: user?.restaurantId });
     } catch (err) {
       console.error('Failed to update order');
     }
@@ -112,30 +92,20 @@ export default function KitchenDisplayPage() {
   const handleMarkReady = async (orderId) => {
     try {
       await updateOrderStatus(orderId, 'ready');
-      setOrders(prev =>
-        prev.map(order =>
-          order._id === orderId ? { ...order, status: 'ready' } : order
-        )
-      );
-      socket?.emit('order:statusUpdate', {
-        orderId,
-        newStatus: 'ready',
-        restaurantId: user?.restaurantId
-      });
+      setOrders(prev => prev.map(o => o._id === orderId ? { ...o, status: 'ready' } : o));
+      socket?.emit('order:statusUpdate', { orderId, newStatus: 'ready', restaurantId: user?.restaurantId });
     } catch (err) {
       console.error('Failed to update order');
     }
   };
 
-  const filteredOrders = filter === 'all'
-    ? orders
-    : orders.filter(order => order.status === filter);
+  const filteredOrders = filter === 'all' ? orders : orders.filter(o => o.status === filter);
 
   if (loading) {
     return (
       <ProtectedRoute allowedRoles={['cook']}>
-        <div className="flex items-center justify-center min-h-screen bg-gray-900">
-          <LoadingSpinner size="lg" className="text-green-400" />
+        <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-indigo-50 to-white">
+          <LoadingSpinner size="lg" className="text-indigo-600" />
         </div>
       </ProtectedRoute>
     );
@@ -143,56 +113,51 @@ export default function KitchenDisplayPage() {
 
   return (
     <ProtectedRoute allowedRoles={['cook']}>
-      <div className="min-h-screen bg-gray-900 text-white">
+      <div className="min-h-screen bg-gray-50">
+
         {/* Header */}
-        <div className="bg-gray-800 border-b border-gray-700 px-6 py-4 shadow-lg flex items-center justify-between">
+        <header className="sticky top-0 z-20 bg-white border-b border-gray-200 shadow-sm px-6 py-3 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-white">🔥 Kitchen Display System</h1>
-            <p className="text-gray-400 text-sm mt-0.5">Manage orders and track meal prep</p>
+            <h1 className="text-xl font-extrabold text-gray-900">🔥 Kitchen Display System</h1>
+            <p className="text-xs text-gray-500">Manage orders and track meal prep</p>
           </div>
           <div className="flex items-center gap-3">
-            {/* Live indicator */}
-            <span className="hidden sm:flex items-center gap-1.5 text-sm text-gray-400">
-              <span className="w-2 h-2 rounded-full bg-green-400 inline-block animate-pulse"></span>
+            <span className="hidden sm:flex items-center gap-1.5 text-sm text-gray-500">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
               Live
             </span>
-            {/* Profile Button */}
             <button
               onClick={() => setShowProfile(true)}
-              className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center text-white font-extrabold text-lg hover:ring-2 hover:ring-orange-300 transition"
+              className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-rose-500 flex items-center justify-center text-white font-extrabold text-sm hover:ring-2 hover:ring-orange-300 transition"
               title="My Profile"
             >
               {(user?.name || '?')[0]}
             </button>
-            {/* Quick Logout */}
             <button
               onClick={() => { logout(); navigate('/staff/login'); }}
-              className="px-3 py-2 bg-gray-700 text-red-400 rounded-xl text-sm font-bold hover:bg-red-900/40 hover:text-red-300 transition"
+              className="px-3 py-2 rounded-xl text-sm font-bold text-red-500 hover:bg-red-50 transition"
               title="Logout"
             >
               🚪
             </button>
           </div>
-        </div>
+        </header>
 
         {/* Filter Tabs */}
-        <div className="bg-gray-800 border-b border-gray-700 px-6 py-4 flex gap-3">
+        <div className="bg-white border-b border-gray-200 px-6 py-3 flex gap-2">
           {FILTER_OPTIONS.map(option => (
             <button
               key={option}
               onClick={() => setFilter(option)}
-              className={`px-6 py-2 rounded-full font-semibold capitalize transition-all ${filter === option
-                  ? 'bg-green-600 text-white shadow-lg'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              className={`px-5 py-1.5 rounded-full text-sm font-semibold capitalize transition-all ${filter === option
+                ? FILTER_STYLES[option]
+                : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                 }`}
             >
               {option}
-              {option === 'all' && (
-                <span className="ml-2 text-sm">({orders.length})</span>
-              )}
-              {option !== 'all' && (
-                <span className="ml-2 text-sm">({orders.filter(o => o.status === option).length})</span>
-              )}
+              <span className="ml-1.5 text-xs opacity-80">
+                ({option === 'all' ? orders.length : orders.filter(o => o.status === option).length})
+              </span>
             </button>
           ))}
         </div>
@@ -200,7 +165,7 @@ export default function KitchenDisplayPage() {
         {/* Orders Grid */}
         <main className="p-6 max-w-7xl mx-auto">
           {filteredOrders.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {filteredOrders.map(order => (
                 <OrderTicket
                   key={order._id}
@@ -211,22 +176,21 @@ export default function KitchenDisplayPage() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-16">
+            <div className="text-center py-20">
               <div className="text-6xl mb-4">🎉</div>
-              <h2 className="text-3xl font-bold text-gray-300 mb-2">All caught up!</h2>
-              <p className="text-gray-500">No {filter !== 'all' ? filter : ''} orders at the moment.</p>
+              <h2 className="text-2xl font-extrabold text-gray-700 mb-1">All caught up!</h2>
+              <p className="text-gray-400 text-sm">
+                No {filter !== 'all' ? filter : ''} orders at the moment.
+              </p>
             </div>
           )}
         </main>
 
-        {/* Alert */}
         <KitchenAlert
           tableNumber={alertOrder?.tableNumber}
           isVisible={showAlert}
           onDismiss={() => setShowAlert(false)}
         />
-
-        {/* User Profile Drawer */}
         <UserProfilePanel isOpen={showProfile} onClose={() => setShowProfile(false)} />
       </div>
     </ProtectedRoute>

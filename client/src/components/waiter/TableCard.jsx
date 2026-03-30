@@ -32,7 +32,7 @@ export const TableCard = ({ table, order, onTableClick }) => {
         <div className="text-sm text-gray-700 space-y-1">
           <p className="font-semibold">{order.items.length} item(s)</p>
           <p className="text-gray-600">
-            Total: <span className="font-bold">${order.totalAmount.toFixed(2)}</span>
+            Total: <span className="font-bold">₹{order.totalAmount.toFixed(2)}</span>
           </p>
           <p className="text-xs text-gray-500 capitalize">Status: {order.status}</p>
         </div>

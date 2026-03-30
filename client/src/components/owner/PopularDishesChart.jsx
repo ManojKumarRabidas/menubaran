@@ -53,7 +53,7 @@ export const PopularDishesChart = ({ items = [] }) => {
                   ></div>
                 </div>
                 <div className="flex justify-between mt-0.5">
-                  <span className="text-xs text-gray-400">${item.price?.toFixed(2)}</span>
+                  <span className="text-xs text-gray-400">₹{item.price?.toFixed(2)}</span>
                   <span className="text-xs font-semibold text-gray-500">{pct}%</span>
                 </div>
               </div>

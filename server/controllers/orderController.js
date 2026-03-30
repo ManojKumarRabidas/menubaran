@@ -21,7 +21,37 @@ export const getOrdersByRestaurant = async (req, res) => {
     }
 };
 
+export const getTodaysOrdersByRestaurant = async (req, res) => {
+    try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        const docs = await Order.find({
+            restaurantId: req.params._id,
+            createdAt: { $gte: today, $lt: tomorrow },
+        }).sort({ createdAt: -1 });
+
+        return res.json({ success: true, docs });
+    } catch (e) {
+        return res.status(500).json({ success: false, error: e.message });
+    }
+};
+
 export const getOrdersByTable = async (req, res) => {
+    try {
+        const docs = await Order.find({
+            tableId: req.params.tableId,
+            status: { $nin: ['cancelled', 'paid'] },
+        }).sort({ createdAt: -1 });
+        return res.json({ success: true, docs });
+    } catch (e) {
+        return res.status(500).json({ success: false, error: e.message });
+    }
+};
+
+export const getCurrentOrdersByTable = async (req, res) => {
     try {
         const docs = await Order.find({
             tableId: req.params.tableId,

@@ -35,9 +35,9 @@ A complete, production-ready restaurant management system built with React + Vit
 │                                                             │
 │  ┌──────────────────────────────────────────────────┐       │
 │  │         Express Server (Port 5000)               │       │
-│  │  - Mock JWT Auth                                 │       │
+│  │  - JWT Auth                                      │       │
 │  │  - Socket.io Event Broadcasting                  │       │
-│  │  - Structured TODO Routes (ready for backend)    │       │
+│  │  - Structured Routes                             │       │
 │  └──────────────────────────────────────────────────┘       │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
@@ -60,10 +60,12 @@ restaurant-saas/
 │   ├── package.json
 │   └── vite.config.js
 ├── server/                 # Express + Socket.io backend
-│   ├── index.js            # Server entry point
-│   ├── routes.js           # API routes (with TODO comments)
+│   ├── controllers         # backend logic controller
+│   ├── models              # collection schema
+│   ├── routes              # API routes
+│   ├── scripts             # seeding codes for initial user creation
+│   ├── server.js           # Server entry point
 │   └── package.json
-├── package.json            # Root monorepo config
 └── README.md
 ```
 
@@ -82,7 +84,14 @@ restaurant-saas/
 
 ### Prerequisites
 - Node.js 16+ and npm
-- MongoDB (for real backend implementation, not required for mock)
+- MongoDB 
+
+### 0. Create .env files
+  i. Open both client and server
+  ii. Create .env files in both folder
+  iii. Copy the content from .env.example
+  iv. Paste it to .env files
+
 
 ### 1. Install Dependencies
 
@@ -116,7 +125,7 @@ The frontend automatically proxies `/api` requests to the backend.
 
 ### 3. Access the Application
 
-- **Customer Menu:** http://localhost:5173/menu/spice-garden/table/table_1
+- **Customer Menu:** http://localhost:5173/menu/resturent_id/table/table_id
 - **Staff Login:** http://localhost:5173/staff/login
 - **Kitchen Display:** http://localhost:5173/kitchen (after login as cook)
 - **Waiter Floor:** http://localhost:5173/floor (after login as waiter)
@@ -129,9 +138,9 @@ The frontend automatically proxies `/api` requests to the backend.
 | Cook     | `/kitchen`              | View pending orders, start cooking, mark ready, audio alerts |
 | Waiter   | `/floor`                | Manage tables, real-time notifications                       |
 | Owner    | `/dashboard`            | KPI stats, menu pricing, popular dishes, recent orders       |
-| Customer | `/menu/:slug/table/:id` | Browse menu, customize items, cart, track orders             |
+| Customer | `/menu/:resturent_id/table/:id` | Browse menu, cart, track orders                      |
 
-## Mock Staff Credentials
+## Staff Credentials
 
 Use these to test staff functionality:
 
@@ -148,30 +157,20 @@ Owner (Spice Garden):
 Email: owner@spice-garden.com
 Password: password123
 
-Cook (Pizza Palace):
-Email: cook@pizza-palace.com
-Password: password123
-
-Waiter (Pizza Palace):
-Email: waiter@pizza-palace.com
-Password: password123
-
-Owner (Pizza Palace):
-Email: owner@pizza-palace.com
-Password: password123
 ```
 
-## QR Code Simulation (Customer Testing)
+## QR Code Simulation (Customer)
 
 To simulate a real QR code-generated table link:
 
 1. Start the frontend: http://localhost:5173
-2. Generate test URLs:
-   - **Spice Garden Table 1:** http://localhost:5173/menu/spice-garden/table/table_1
-   - **Spice Garden Table 2:** http://localhost:5173/menu/spice-garden/table/table_2
-   - **Pizza Palace Table 1:** http://localhost:5173/menu/pizza-palace/table/table_7
+2. Log in as owner
+3. Go to table tab
+4. Click on any table
+5. Click on generate QR
+6. Visit the QR code/ Link given below the QR code
 
-In production, a QR code would simply link to `/menu/{restaurantSlug}/table/{tableId}`.
+In production, a QR code would simply link to `/menu/{restaurant_id}/table/{table_id}`.
 
 ## File Structure
 
@@ -237,162 +236,19 @@ socket.off('order:statusUpdate', handler);
 
 ### Pre-wired Events
 
-| Event | Trigger | Consumers |
-|-------|---------|-----------|
-| `order:new` | Customer places order | Kitchen (alert + ding), Waiter (notification) |
+| Event                | Trigger                  | Consumers                                          |
+|----------------------|--------------------------|----------------------------------------------------|
+| `order:new`          | Customer places order    | Kitchen (alert + ding), Waiter (notification)      |
 | `order:statusUpdate` | Cook marks step complete | Customer (stepper advances), Waiter (notification) |
-| `table:requestBill` | Customer requests bill | Waiter (urgent red notification) |
-| `table:requestWater` | Customer requests water | Waiter (notification) |
+| `table:requestBill`  | Customer requests bill   | Waiter (urgent red notification)                   |
+| `table:requestWater` | Customer requests water  | Waiter (notification)                              |
 
 All events include a 100-300ms network latency simulation.
-
-## Converting to Real Backend
-
-Follow these steps when you're ready to connect a real database and backend:
-
-### 1. **Update `client/src/services/api.js`**
-
-Replace the mock import with axios:
-
-```javascript
-// BEFORE
-import { restaurants, menuItems } from '../data/data.js'
-
-// AFTER
-import axios from 'axios'
-const BASE = import.meta.env.VITE_API_URL
-```
-
-Update each function body (callers stay unchanged):
-
-```javascript
-// BEFORE
-export const getMenuByRestaurant = async (slug) => {
-  const restaurant = restaurants.find(r => r.slug === slug)
-  return Promise.resolve({ data: menuItems.filter(...) })
-}
-
-// AFTER
-export const getMenuByRestaurant = async (slug) => {
-  return axios.get(`${BASE}/api/menu/${slug}`)
-}
-```
-
-### 2. **Implement `server/routes.js`**
-
-Replace TODO comments with actual database logic. Example:
-
-```javascript
-// BEFORE (placeholder)
-router.get('/menu/:slug', async (req, res) => {
-  // TODO: const restaurant = await Restaurant.findOne({ slug })
-  // TODO: const items = await MenuItem.find({ restaurantId: restaurant?.id })
-})
-
-// AFTER (real implementation)
-router.get('/menu/:slug', async (req, res) => {
-  const restaurant = await Restaurant.findOne({ slug })
-  if (!restaurant) return res.status(404).json({ error: 'Restaurant not found' })
-  const items = await MenuItem.find({ restaurantId: restaurant.id, isAvailable: true })
-  res.json({ success: true, data: items })
-})
-```
-
-### 3. **Connect Socket.io**
-
-In `server/index.js`, implement socket event handlers:
-
-```javascript
-io.on('connection', (socket) => {
-  socket.on('order:new', (data) => {
-    // Broadcast to all staff in the restaurant
-    io.to(data.restaurantId).emit('order:new', data)
-  })
-
-  socket.on('order:statusUpdate', (data) => {
-    io.to(data.restaurantId).emit('order:statusUpdate', data)
-  })
-})
-```
-
-### 4. **Set Environment Variables**
-
-Create a `.env` file in `client/`:
-
-```
-VITE_API_URL=http://localhost:5000
-```
-
-In `.env.production`:
-
-```
-VITE_API_URL=https://your-api-domain.com
-```
-
-### 5. **Database Schema**
-
-Your backend needs these collections/tables:
-
-- **restaurants** - { id, slug, name, tagline, address, subscriptionPlan, subscriptionStatus }
-- **menuCategories** - { id, restaurantId, name, icon, sortOrder }
-- **menuItems** - { id, categoryId, restaurantId, name, description, price, isAvailable, isPopular, isVeg, tags, preparationTimeMinutes }
-- **tables** - { id, restaurantId, number, status, currentOrderId }
-- **orders** - { id, restaurantId, tableId, tableNumber, items, status, statusHistory, specialInstructions, totalAmount, createdAt }
-- **staff** - { id, restaurantId, name, email, hashedPassword, role }
-
-### 6. **Authentication**
-
-Replace mock JWT generation with real signing:
-
-```javascript
-// server/services/auth.js
-import jwt from 'jsonwebtoken'
-
-export const generateToken = (user) => {
-  return jwt.sign(
-    { id: user.id, name: user.name, role: user.role, restaurantId: user.restaurantId },
-    process.env.JWT_SECRET,
-    { expiresIn: '24h' }
-  )
-}
-```
-
-## Code Quality Notes
-
-- **JSDoc comments** on all exported functions in `api.js` and hooks
-- **Cleanup functions** in all `useEffect` hooks that use sockets
-- **Named exports** for components, default exports for pages
-- **CartContext persists** to sessionStorage (cleared when tab closes)
-- **No hardcoded strings** — constants defined at top of files
-- **Mobile-first** design for customer and waiter views
-- **Proper ARIA attributes** and semantic HTML throughout
-
-## Troubleshooting
-
-**Q: Frontend can't reach backend**
-- Ensure backend is running on port 5000
-- Check that vite.config.js proxy is configured correctly
-- Look for CORS errors in browser console
-
-**Q: Socket events not firing**
-- Check browser console for errors
-- Verify socket listeners are being registered in useEffect
-- Ensure useEffect cleanup functions are called
-
-**Q: Kitchen audio not working**
-- Web Audio API requires user interaction first
-- Try clicking a button on the page before opening kitchen display
-- Some browsers block audio in certain contexts
-
-**Q: Login not persisting**
-- Check localStorage is enabled in browser
-- Verify AuthProvider wraps entire app
-- Token expiration check in decodeToken helper
 
 ## Demo Flow
 
 1. **Customer Journey:**
-   - Visit `/menu/spice-garden/table/table_1`
+   - Visit `/menu/resturent_id/table/table_1`
    - Browse menu by category
    - Add items to cart with customizations
    - View cart and checkout
@@ -416,19 +272,5 @@ export const generateToken = (user) => {
    - View KPI metrics (revenue, orders, popular items)
    - Edit menu prices with save confirmation
    - View recent orders with status tracking
-
-## Production Deployment
-
-When ready to deploy:
-
-1. Build frontend: `cd client && npm run build` → creates `dist/`
-2. Serve frontend from backend or CDN
-3. Deploy backend to hosting platform (Vercel, Railway, Heroku, etc.)
-4. Set environment variables on hosting platform
-5. Connect to production database
-6. Update Socket.io CORS origin
-7. Set JWT_SECRET in production
-
----
 
 **Built with ❤️ for modern restaurant automation.**

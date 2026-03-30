@@ -143,6 +143,19 @@ export default function WaiterFloorPage() {
     return orders.find(o => o.tableId === tableId);
   };
 
+  const changeStatus = async (currentOrderId, status) => {
+    // console.log(currentOrderId, status)
+    await updateOrderStatus(currentOrderId, status);
+    onOrdersChange(prev =>
+      prev.map(o =>
+        o._id === currentOrderId
+          ? { ...o, status, paymentStatus: status === 'paid' ? 'paid' : o.paymentStatus }
+          : o
+      )
+    );
+    onToast?.(`Order ${currentOrderId.substring(0, 8)} → ${status}`, 'success');
+  };
+
   if (loading) {
     return (
       <ProtectedRoute allowedRoles={['waiter']}>
@@ -251,7 +264,7 @@ export default function WaiterFloorPage() {
 
         {/* Order Modal */}
         {showOrderModal && selectedTable && (
-          <div className="fixed inset-0 z-50 flex items-center md:items-start md:pt-16 bg-black bg-opacity-50">
+          <div className="fixed inset-0 z-50 flex justify-center items-center md:items-start md:pt-16 bg-black bg-opacity-50">
             <div className="bg-white rounded-t-lg md:rounded-lg w-full md:w-96 shadow-2xl">
               <div className="bg-gradient-to-r from-blue-600 to-sky-600 text-white p-4 flex items-center justify-between">
                 <h2 className="font-bold text-lg">Table {selectedTable.number}</h2>
@@ -291,13 +304,20 @@ export default function WaiterFloorPage() {
                 ) : (
                   <p className="text-gray-500 text-center py-8">No active order for this table</p>
                 )}
-
-                <button
-                  onClick={() => setShowOrderModal(false)}
-                  className="mt-6 w-full bg-gray-200 text-gray-900 font-bold py-2 rounded-lg hover:bg-gray-300 transition"
-                >
-                  Close
-                </button>
+                <div>
+                  <button
+                    onClick={() => setShowOrderModal(false)}
+                    className="mt-6 w-full bg-gray-200 text-gray-900 font-bold py-2 rounded-lg hover:bg-gray-300 transition"
+                  >
+                    Close
+                  </button>
+                  {/* <button
+                    onClick={() => changeStatus(getOrderForTable(selectedTable.currentOrderId), 'served')}
+                    className="mt-6 w-full bg-gray-200 text-gray-900 font-bold py-2 rounded-lg hover:bg-gray-300 transition"
+                  >
+                    Mark as Served
+                  </button> */}
+                </div>
               </div>
             </div>
           </div>

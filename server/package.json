@@ -4,9 +4,9 @@
   "type": "module",
   "main": "server.js",
   "scripts": {
-    "dev": "nodemon server.js",
-    "start": "nodemon server.js",
-    "build": "node -e \"console.log('Production build ready')\""
+    "dev": "nodemon --exec node server.js",
+    "build": "node -e \"console.log('Production build ready')\"",
+    "start": "node server.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

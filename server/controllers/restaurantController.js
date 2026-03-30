@@ -1,29 +1,3 @@
-// import Restaurant from '../models/Restaurants.js';
-// import Table from '../models/Tables.js';
-// const getRestaurantById = async (req, res) => {
-//     const { _id } = req.params;
-//     try {
-//         const restaurant = await Restaurant.findById(_id);
-//         if (!restaurant) {
-//             return res.status(404).json({ error: 'Restaurant not found' });
-//         }
-//         res.json({ success: true, doc: restaurant });
-//     } catch (error) {
-//         res.status(500).json({ error: 'Internal server error' });
-//     }
-// }
-
-// const getRestaurantTablesById = async (req, res) => {
-//     const { _id } = req.params;
-//     try {
-//         const tables = await Table.find({ restaurantId: _id });
-//         res.json({ success: true, docs: tables });
-//     } catch (e) {
-//         res.status(500).json({ error: 'Internal server error' });
-//     }
-// }
-// export { getRestaurantById, getRestaurantTablesById };
-
 import Restaurant from '../models/Restaurants.js';
 import Order from '../models/Orders.js';
 import MenuItem from '../models/MenuItems.js';

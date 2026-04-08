@@ -111,9 +111,14 @@ export default function LoginPage({ isAdmin = false }) {
               {loading ? <LoadingSpinner size="sm" /> : '→'}
               {loading ? 'Logging in...' : 'Login'}
             </button>
-            <span onClick={() => navigate('/')} className="py-5 text-center text-indigo-600 hover:text-indigo-800 text-sm font-medium" style={{ textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", padding: "0", cursor: "pointer" }}>
-              ← Back to Home
-            </span>
+            <div className="flex flex-col gap-3">
+              <span onClick={() => navigate('/register')} className="text-center text-amber-600 hover:text-amber-800 text-sm font-semibold cursor-pointer">
+                Don't have an account? Register your restaurant here
+              </span>
+              <span onClick={() => navigate('/')} className="text-center text-indigo-600 hover:text-indigo-800 text-sm font-medium cursor-pointer">
+                ← Back to Home
+              </span>
+            </div>
           </form>
 
           {/* Demo Credentials */}

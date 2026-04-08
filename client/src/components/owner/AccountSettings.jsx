@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
-import { restaurants, subscriptionPlans, staff as initialStaff } from '../../data/data.js';
+import { restaurants, subscriptionPlans } from '../../data/data.js';
+import { createStaff, updateStaff, deleteStaff, toggleStaffStatus } from '../../services/api.js';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const LOGO_COLORS = [
@@ -332,21 +333,14 @@ export const AccountSettings = ({
   restaurantId,
   onToast,
   tab = 'account',
+  staffList = [],
+  onStaffChange,
 }) => {
-  console.log("restorent id", restaurantId);
-  console.log("restorent prop", restaurantProp);
   const restaurant = restaurantProp.data || restaurants.find(r => r._id === restaurantId) || {};
   const plan = subscriptionPlans.find(p =>
     p.name.toLowerCase() === restaurant.subscriptionPlan
   ) || subscriptionPlans[1];
 
-  // Staff state — seeded from data.js, managed locally until backend is ready
-  // const [staffList, setStaffList] = useState(
-  //   () => initialStaff
-  //     .filter(s => s.restaurantId === restaurantId)
-  //     .map(s => ({ ...s, isActive: s.isActive !== undefined ? s.isActive : true }))
-  // );
-  const [staffList, setStaffList] = useState([])
   // Modal states
   const [formModal, setFormModal] = useState(null);  // null | 'add' | staffMember object
   const [confirmModal, setConfirmModal] = useState(null);  // null | { type, member }
@@ -367,50 +361,45 @@ export const AccountSettings = ({
   const [theme, setTheme] = useState('auto');
 
   // ── Staff CRUD handlers ────────────────────────────────────────────────────
-  const handleSaveStaff = (formData, editId) => {
+  const handleSaveStaff = async (formData, editId) => {
     if (editId) {
-      // Update existing
-      setStaffList(prev => prev.map(s =>
-        s._id === editId
-          ? {
-            ...s,
-            name: formData.name,
-            email: formData.email,
-            role: formData.role,
-            avatarColor: formData.avatarColor,
-            ...(formData.password ? { password: formData.password } : {}),
-          }
-          : s
-      ));
-      onToast?.('Staff member updated!', 'success');
+      const res = await updateStaff(editId, formData);
+      if (res.data) {
+        onStaffChange(staffList.map(s => s._id === editId ? res.data : s));
+        onToast?.('Staff member updated!', 'success');
+      } else {
+        onToast?.(res.error || 'Failed to update', 'error');
+      }
     } else {
-      // Add new — generate a temp _id (backend will replace with real _id)
-      const newMember = {
-        _id: `temp-${Date.now()}`,
-        restaurantId,
-        name: formData.name,
-        email: formData.email,
-        password: formData.password, // hash in prod
-        role: formData.role,
-        avatarColor: formData.avatarColor,
-        isActive: true,
-      };
-      setStaffList(prev => [...prev, newMember]);
-      onToast?.(`${formData.name} added to staff!`, 'success');
+      const res = await createStaff(restaurantId, formData);
+      if (res.data) {
+        onStaffChange([...staffList, res.data]);
+        onToast?.(`${formData.name} added to staff!`, 'success');
+      } else {
+        onToast?.(res.error || 'Failed to add staff', 'error');
+      }
     }
   };
 
-  const handleDeleteConfirm = (member) => {
-    setStaffList(prev => prev.filter(s => s._id !== member._id));
-    onToast?.(`${member.name} removed from staff`, 'info');
+  const handleDeleteConfirm = async (member) => {
+    const res = await deleteStaff(member._id);
+    if (res.data) {
+      onStaffChange(staffList.filter(s => s._id !== member._id));
+      onToast?.(`${member.name} removed from staff`, 'info');
+    } else {
+      onToast?.('Failed to delete staff', 'error');
+    }
   };
 
-  const handleToggleActiveConfirm = (member) => {
-    setStaffList(prev => prev.map(s =>
-      s._id === member._id ? { ...s, isActive: !s.isActive } : s
-    ));
-    const action = member.isActive === false ? 'activated' : 'deactivated';
-    onToast?.(`${member.name} ${action}`, 'info');
+  const handleToggleActiveConfirm = async (member) => {
+    const res = await toggleStaffStatus(member._id);
+    if (res.data) {
+      onStaffChange(staffList.map(s => s._id === member._id ? { ...s, isActive: res.data.isActive } : s));
+      const action = res.data.isActive ? 'activated' : 'deactivated';
+      onToast?.(`${member.name} ${action}`, 'info');
+    } else {
+      onToast?.('Failed to toggle status', 'error');
+    }
   };
 
   // Emails for duplicate check (excluding current edit target handled in modal)

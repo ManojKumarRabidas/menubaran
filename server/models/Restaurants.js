@@ -9,6 +9,8 @@ const restaurantSchema = new mongoose.Schema(
         logoPlaceholderColor: { type: String },
         subscriptionPlan: { type: String, enum: ['free', 'basic', 'pro'], default: 'free' },
         subscriptionStatus: { type: String, enum: ['active', 'inactive', 'cancelled'], default: 'inactive' },
+        status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'approved' },
+        registrationDocument: { type: String },
     },
     { timestamps: true }
 );

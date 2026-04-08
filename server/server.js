@@ -8,7 +8,13 @@ import mongoose from 'mongoose';
 import routes from './routes/index.js';
 import { runSeed } from './scripts/seed.js';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const server = http.createServer(app);
@@ -70,6 +76,7 @@ app.use('/api', rateLimit({
 
 // ── Middleware ────────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '10kb' }));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.get('/', (req, res) => res.send('API is running'));

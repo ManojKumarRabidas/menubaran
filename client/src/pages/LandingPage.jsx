@@ -62,7 +62,7 @@ export default function LandingPage() {
               Sign In
             </button>
             <button
-              onClick={() => navigate('/staff/login')}
+              onClick={() => navigate('/register')}
               className="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-bold rounded-xl shadow-sm transition active:scale-95"
             >
               Get Started →
@@ -93,7 +93,7 @@ export default function LandingPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
-              onClick={() => navigate('/staff/login')}
+              onClick={() => navigate('/register')}
               className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 text-base"
             >
               Start Free Trial
@@ -181,7 +181,7 @@ export default function LandingPage() {
                 </div>
                 <p className="text-sm text-gray-500 mb-6">{p.tables}</p>
                 <button
-                  onClick={() => navigate('/staff/login')}
+                  onClick={() => navigate('/register')}
                   className={`w-full py-2.5 rounded-xl font-bold text-sm transition active:scale-95 ${
                     p.highlight
                       ? 'bg-amber-600 hover:bg-amber-700 text-white shadow-md'

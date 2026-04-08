@@ -256,6 +256,64 @@ export const getWeeklyRevenue = async (restaurantId) => {
   }
 };
 
+// ── Staff ─────────────────────────────────────────────────────────────────────
+
+export const getStaffByRestaurant = async (restaurantId) => {
+  try {
+    if (!restaurantId) return { data: [] };
+    const res = await api(`/api/restaurants/${restaurantId}/staff`);
+    return { data: res.success ? res.data : [] };
+  } catch {
+    return { data: [] };
+  }
+};
+
+export const createStaff = async (restaurantId, data) => {
+  try {
+    const res = await api(`/api/restaurants/${restaurantId}/staff`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    return { data: res.success ? res.data : null, error: res.error };
+  } catch (error) {
+    return { data: null, error: error.message };
+  }
+};
+
+export const updateStaff = async (staffId, data) => {
+  try {
+    const res = await api(`/api/staff/${staffId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+    return { data: res.success ? res.data : null, error: res.error };
+  } catch (error) {
+    return { data: null, error: error.message };
+  }
+};
+
+export const deleteStaff = async (staffId) => {
+  try {
+    const res = await api(`/api/staff/${staffId}`, {
+      method: 'DELETE',
+    });
+    return { data: res.success };
+  } catch {
+    return { data: false };
+  }
+};
+
+export const toggleStaffStatus = async (staffId) => {
+  try {
+    const res = await api(`/api/staff/${staffId}/toggle`, {
+      method: 'PATCH',
+    });
+    return { data: res.success ? res.data : null };
+  } catch {
+    return { data: null };
+  }
+};
+
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
 export const staffLogin = async (email, password) => {

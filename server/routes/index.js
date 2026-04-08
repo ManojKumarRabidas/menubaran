@@ -1,12 +1,17 @@
 import express from 'express';
 import { adminLogin } from '../controllers/adminController.js';
-import { staffLogin } from '../controllers/staffController.js';
+import { staffLogin, getStaffByRestaurant, createStaff, toggleStaffStatus, updateStaff, deleteStaff } from '../controllers/staffController.js';
 import {
   getRestaurantById,
   getRestaurantBySlug,
   getOwnerStats,
   getWeeklyRevenue,
+  registerRestaurant,
+  getPendingRestaurants,
+  approveRestaurant,
+  rejectRestaurant
 } from '../controllers/restaurantController.js';
+import upload from '../middleware/uploadMiddleware.js';
 import {
   getMenuByRestaurantId,
   getMenuBySlug,
@@ -40,6 +45,17 @@ router.post('/admin/login', adminLogin);
 router.post('/staff/login', staffLogin);
 
 // ── Restaurants ───────────────────────────────────────────────────────────────
+router.get('/restaurants/:_id/staff', getStaffByRestaurant);
+router.post('/restaurants/:_id/staff', createStaff);
+router.patch('/staff/:_id/toggle', toggleStaffStatus);
+router.patch('/staff/:_id', updateStaff);
+router.delete('/staff/:_id', deleteStaff);
+
+router.post('/restaurants/register', upload.single('registrationDocument'), registerRestaurant);
+router.get('/admin/restaurants/pending', getPendingRestaurants);
+router.patch('/admin/restaurants/:_id/approve', approveRestaurant);
+router.patch('/admin/restaurants/:_id/reject', rejectRestaurant);
+
 router.get('/restaurants/:_id', getRestaurantById);
 router.get('/restaurants/slug/:slug', getRestaurantBySlug);
 router.get('/restaurants/:_id/stats', getOwnerStats);

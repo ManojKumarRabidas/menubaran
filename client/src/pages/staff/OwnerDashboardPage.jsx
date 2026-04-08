@@ -15,7 +15,7 @@ import { useAuth } from '../../hooks/useAuth.js';
 import {
   getOwnerStats, getMenuByRestaurant, getCategoriesByRestaurant,
   getTablesByRestaurant, getOrdersByRestaurant, getWeeklyRevenue,
-  updateMenuItemPrice, getRestaurantById
+  updateMenuItemPrice, getRestaurantById, getStaffByRestaurant
 } from '../../services/api.js';
 import { restaurants, menuCategories } from '../../data/data.js';
 
@@ -49,6 +49,7 @@ export default function OwnerDashboardPage() {
   const [tables, setTables] = useState([]);
   const [orders, setOrders] = useState([]);
   const [weeklyRevenue, setWeeklyRevenue] = useState([]);
+  const [staffList, setStaffList] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [toast, setToast] = useState({ msg: '', type: '' });
@@ -63,13 +64,14 @@ export default function OwnerDashboardPage() {
   const load = async () => {
     try {
 
-      const [statsRes, menuRes, catRes, tablesRes, ordersRes, weekRes] = await Promise.all([
+      const [statsRes, menuRes, catRes, tablesRes, ordersRes, weekRes, staffRes] = await Promise.all([
         getOwnerStats(user?.restaurantId).catch(e => { console.error('[FAIL] getOwnerStats:', e); return null; }),
         getMenuByRestaurant(user?.restaurantId).catch(e => { console.error('[FAIL] getMenuByRestaurant:', e); return null; }),
         getCategoriesByRestaurant(user?.restaurantId).catch(e => { console.error('[FAIL] getCategoriesByRestaurant:', e); return null; }),
         getTablesByRestaurant(user?.restaurantId).catch(e => { console.error('[FAIL] getTablesByRestaurant:', e); return null; }),
         getOrdersByRestaurant(user?.restaurantId).catch(e => { console.error('[FAIL] getOrdersByRestaurant:', e); return null; }),
         getWeeklyRevenue(user?.restaurantId).catch(e => { console.error('[FAIL] getWeeklyRevenue:', e); return null; }),
+        getStaffByRestaurant(user?.restaurantId).catch(e => { console.error('[FAIL] getStaffByRestaurant:', e); return null; }),
       ]);
 
       // Only set state if response is not null
@@ -79,6 +81,7 @@ export default function OwnerDashboardPage() {
       if (tablesRes) setTables(tablesRes.data);
       if (ordersRes) setOrders(ordersRes.data);
       if (weekRes) setWeeklyRevenue(weekRes.data);
+      if (staffRes) setStaffList(staffRes.data);
 
     } catch (e) {
       showToast('Failed to load dashboard data', 'error');
@@ -357,6 +360,8 @@ export default function OwnerDashboardPage() {
                 restaurantId={user?.restaurantId}
                 onToast={showToast}
                 tab="account"
+                staffList={staffList}
+                onStaffChange={setStaffList}
               />
             )}
 

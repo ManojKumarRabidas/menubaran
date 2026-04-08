@@ -1,6 +1,8 @@
 import Restaurant from '../models/Restaurants.js';
 import Order from '../models/Orders.js';
 import MenuItem from '../models/MenuItems.js';
+import Staff from '../models/Staff.js';
+import bcrypt from 'bcryptjs';
 
 export const getRestaurantById = async (req, res) => {
     try {
@@ -103,6 +105,94 @@ export const getWeeklyRevenue = async (req, res) => {
         });
 
         return res.json({ success: true, data });
+    } catch (e) {
+        return res.status(500).json({ success: false, error: e.message });
+    }
+};
+
+export const registerRestaurant = async (req, res) => {
+    try {
+        const { restaurantName, ownerName, email, password, address } = req.body;
+        const file = req.file;
+
+        if (!restaurantName || !ownerName || !email || !password || !file) {
+            return res.status(400).json({ success: false, error: 'All fields including document are required' });
+        }
+
+        const existingStaff = await Staff.findOne({ email });
+        if (existingStaff) {
+            return res.status(400).json({ success: false, error: 'Email already exists' });
+        }
+
+        const slug = restaurantName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+
+        const restaurant = new Restaurant({
+            name: restaurantName,
+            slug: slug,
+            address,
+            status: 'pending',
+            registrationDocument: `/uploads/${file.filename}`
+        });
+        await restaurant.save();
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const owner = new Staff({
+            restaurantId: restaurant._id,
+            name: ownerName,
+            email,
+            password: hashedPassword,
+            role: 'owner',
+            isActive: false
+        });
+        await owner.save();
+
+        return res.json({ success: true, message: 'Registration submitted for approval' });
+    } catch (e) {
+        return res.status(500).json({ success: false, error: e.message });
+    }
+};
+
+export const getPendingRestaurants = async (req, res) => {
+    try {
+        const pending = await Restaurant.find({ status: 'pending' }).sort({ createdAt: -1 });
+        const pendingWithOwners = await Promise.all(pending.map(async (r) => {
+            const owner = await Staff.findOne({ restaurantId: r._id, role: 'owner' });
+            return {
+                ...r.toObject(),
+                ownerName: owner?.name,
+                ownerEmail: owner?.email
+            };
+        }));
+        return res.json({ success: true, data: pendingWithOwners });
+    } catch (e) {
+        return res.status(500).json({ success: false, error: e.message });
+    }
+};
+
+export const approveRestaurant = async (req, res) => {
+    try {
+        const { _id } = req.params;
+        const restaurant = await Restaurant.findByIdAndUpdate(_id, { status: 'approved' }, { new: true });
+        if (!restaurant) return res.status(404).json({ success: false, error: 'Not found' });
+        
+        await Staff.findOneAndUpdate(
+            { restaurantId: _id, role: 'owner' },
+            { isActive: true }
+        );
+        
+        return res.json({ success: true, message: 'Restaurant approved successfully' });
+    } catch (e) {
+        return res.status(500).json({ success: false, error: e.message });
+    }
+};
+
+export const rejectRestaurant = async (req, res) => {
+    try {
+        const { _id } = req.params;
+        const restaurant = await Restaurant.findByIdAndUpdate(_id, { status: 'rejected' }, { new: true });
+        if (!restaurant) return res.status(404).json({ success: false, error: 'Not found' });
+        
+        return res.json({ success: true, message: 'Restaurant rejected successfully' });
     } catch (e) {
         return res.status(500).json({ success: false, error: e.message });
     }

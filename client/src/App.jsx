@@ -5,6 +5,7 @@ import { OrderProvider } from './context/OrderContext.jsx';
 
 // Public
 import LandingPage from './pages/LandingPage.jsx';
+import RegisterPage from './pages/RegisterPage.jsx';
 
 // Customer Pages
 import MenuPage from './pages/customer/MenuPage.jsx';
@@ -33,6 +34,7 @@ function App() {
             <Routes>
               {/* Landing / Home */}
               <Route path="/" element={<LandingPage />} />
+              <Route path="/register" element={<RegisterPage />} />
 
               {/* Customer Routes – URL uses real DB IDs
                   e.g. /menu/rest_1/table/table_3 */}

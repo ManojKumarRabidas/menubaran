@@ -50,9 +50,14 @@ export const PaymentDesk = ({ orders = [], onToast, onOrdersChange }) => {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Unpaid Orders */}
       <div className="lg:col-span-2 space-y-4">
-        <div className="bg-white rounded-2xl shadow-md p-4">
-          <h3 className="font-bold text-gray-900 text-lg mb-1">Pending Payments</h3>
-          <p className="text-sm text-gray-500">{unpaidOrders.length} order{unpaidOrders.length !== 1 ? 's' : ''} awaiting payment</p>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h3 className="text-lg font-black text-gray-900">Pending Payments</h3>
+            <p className="text-xs text-gray-500 font-bold uppercase tracking-widest">{unpaidOrders.length} orders awaiting desk</p>
+          </div>
+          <div className="hidden sm:block px-4 py-1.5 bg-amber-50 text-amber-700 rounded-lg text-[10px] font-black uppercase tracking-wider">
+            Mock Desk Mode
+          </div>
         </div>
 
         {unpaidOrders.length === 0 ? (
@@ -63,30 +68,42 @@ export const PaymentDesk = ({ orders = [], onToast, onOrdersChange }) => {
           </div>
         ) : (
           unpaidOrders.map(order => (
-            <div key={order._id} className="bg-white rounded-2xl shadow-md p-5 border-l-4 border-amber-400">
-              <div className="flex items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-extrabold text-gray-900 text-lg">Table {order.tableNumber}</span>
-                    <span className="text-xs font-bold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full capitalize">{order.status}</span>
+            <div key={order._id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 hover:shadow-md transition-shadow relative overflow-hidden group">
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-amber-400"></div>
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center font-black text-gray-900">T{order.tableNumber}</div>
+                    <div>
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Order #{order._id.substring(0, 8)}</p>
+                      <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md ${order.status === 'bill-requested' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-600'}`}>
+                        {order.status}
+                      </span>
+                    </div>
                   </div>
-                  <p className="text-xs text-gray-500 font-mono">{order._id.substring(0, 12)}…</p>
-                  <div className="mt-2 space-y-0.5">
+                  <div className="space-y-1 my-3 lg:my-4">
                     {order.items.map((item, i) => (
-                      <p key={i} className="text-sm text-gray-600">• {item.name} × {item.qty} — ₹{(item.price * item.qty).toFixed(2)}</p>
+                      <div key={i} className="flex items-center justify-between text-xs sm:text-sm">
+                        <span className="text-gray-600 font-medium">{item.name} <span className="text-gray-400 font-bold ml-1">×{item.qty}</span></span>
+                        <span className="text-gray-400 font-semibold">₹{(item.price * item.qty).toFixed(0)}</span>
+                      </div>
                     ))}
                   </div>
                   {order.specialInstructions && (
-                    <p className="text-xs text-amber-600 mt-1">📝 {order.specialInstructions}</p>
+                    <div className="text-[10px] text-amber-700 font-bold bg-amber-50 inline-block px-2 py-1 rounded-lg">📣 {order.specialInstructions}</div>
                   )}
                 </div>
-                <div className="text-right flex-shrink-0 ml-4">
-                  <p className="text-2xl font-extrabold text-indigo-600">₹{order.totalAmount.toFixed(2)}</p>
-                  <p className="text-xs text-gray-500 mb-3">{new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-4 sm:min-w-[140px] pt-4 sm:pt-0 border-t sm:border-t-0 border-gray-50">
+                  <div className="text-left sm:text-right">
+                    <p className="text-2xl font-black text-indigo-600 leading-none mb-1">₹{order.totalAmount.toFixed(2)}</p>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">
+                      Started {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
                   <button
                     onClick={() => openPayment(order)}
-                    className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl text-sm font-bold hover:opacity-90 transition shadow-md"
-                  >💳 Process Payment</button>
+                    className="flex-1 sm:flex-none px-6 py-3 bg-indigo-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-indigo-700 shadow-xl shadow-indigo-100 active:scale-95 transition-all"
+                  >Pay Now</button>
                 </div>
               </div>
             </div>
@@ -97,10 +114,17 @@ export const PaymentDesk = ({ orders = [], onToast, onOrdersChange }) => {
       {/* Right Panel: Summary + History */}
       <div className="space-y-4">
         {/* Revenue Summary */}
-        <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl shadow-md p-5 text-white">
-          <p className="text-indigo-200 text-sm font-semibold mb-1">Today's Collected</p>
-          <p className="text-4xl font-extrabold">₹{totalPaidToday.toFixed(2)}</p>
-          <p className="text-indigo-300 text-xs mt-2">{paidOrders.length} payments processed</p>
+        {/* Revenue Summary */}
+        <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-3xl shadow-xl p-6 text-white relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
+          <div className="relative z-10">
+            <p className="text-indigo-200 text-[10px] font-black uppercase tracking-widest mb-1">Today's Collections</p>
+            <p className="text-4xl font-black mb-1">₹{totalPaidToday.toFixed(0)}</p>
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <p className="text-indigo-200 text-[10px] font-bold uppercase">{paidOrders.length} successful payments</p>
+            </div>
+          </div>
         </div>
 
         {/* Payment History */}

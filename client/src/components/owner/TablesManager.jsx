@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { updateTable, addTable } from '../../services/api.js';
+import { updateTable, addTable, clearTableRequest } from '../../services/api.js';
+import { useSocket } from '../../hooks/useSocket.js';
 
 const STATUS_STYLES = {
   free: { bg: 'bg-emerald-50 border-emerald-200', badge: 'bg-emerald-100 text-emerald-700', icon: '✓', label: 'Free' },
@@ -12,7 +13,8 @@ const STATUS_STYLES = {
 /**
  * Tables Manager — visual grid with status, rename, add table, QR generation
  */
-export const TablesManager = ({ tables = [], orders = [], restaurantId, onToast, onTablesChange }) => {
+export const TablesManager = ({ tables = [], orders = [], requests = [], restaurantId, onToast, onTablesChange, onRequestsChange }) => {
+  const socket = useSocket();
   const navigate = useNavigate();
   const [editingId, setEditingId] = useState(null);
   const [editNumber, setEditNumber] = useState('');
@@ -40,6 +42,22 @@ export const TablesManager = ({ tables = [], orders = [], restaurantId, onToast,
     onToast?.(`Table ${table.number} marked as free`, 'info');
   };
 
+  const clearRequestsForTable = async (tableId) => {
+    const tableRequests = requests.filter(r => r.tableId === tableId);
+    if (tableRequests.length === 0) return;
+
+    try {
+      await Promise.all(tableRequests.map(r => clearTableRequest(r._id)));
+      tableRequests.forEach(r => {
+        socket.emit('table:clearRequest', { requestId: r._id, restaurantId });
+      });
+      onRequestsChange(prev => prev.filter(r => r.tableId !== tableId));
+      onToast?.('Requests cleared', 'success');
+    } catch (err) {
+      onToast?.('Failed to clear requests', 'error');
+    }
+  };
+
   const handleAddTable = async () => {
     const num = parseInt(newTableNumber);
     if (!num || num <= 0) { onToast?.('Enter a valid table number', 'error'); return; }
@@ -58,34 +76,40 @@ export const TablesManager = ({ tables = [], orders = [], restaurantId, onToast,
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="bg-white rounded-2xl shadow-md p-4 flex items-center justify-between">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h3 className="font-bold text-gray-900">Table Management</h3>
-          <p className="text-sm text-gray-500">{tables.length} tables total</p>
+          <h3 className="text-lg font-black text-gray-900">Table Management</h3>
+          <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">{tables.length} tables total</p>
         </div>
-        <div className="flex gap-2 flex-wrap">
-          {Object.entries(STATUS_STYLES).map(([key, val]) => (
-            <span key={key} className={`text-xs font-semibold px-5 py-1 rounded-xl flex items-center justify-center ${val.badge}`}>{val.icon} {val.label}</span>
-          ))}
+        <div className="flex gap-2 flex-wrap items-center">
+          <div className="flex flex-wrap gap-1.5 order-2 sm:order-1">
+            {Object.entries(STATUS_STYLES).map(([key, val]) => (
+              <span key={key} className={`text-[10px] font-black uppercase tracking-tight px-3 py-1 rounded-lg flex items-center gap-1 border ${val.badge}`}>{val.icon} {val.label}</span>
+            ))}
+          </div>
           <button
             onClick={() => setAddingTable(true)}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition"
-          >+ Add Table</button>
+            className="w-full sm:w-auto order-1 sm:order-2 px-6 py-2 bg-indigo-600 text-white rounded-xl text-sm font-black shadow-lg shadow-indigo-200 hover:bg-indigo-700 active:scale-95 transition-all"
+          >+ New Table</button>
         </div>
       </div>
 
       {/* Add Table Form */}
       {addingTable && (
-        <div className="bg-indigo-50 border border-indigo-200 rounded-2xl p-4 flex items-center gap-3">
-          <span className="text-sm font-semibold text-indigo-700">New Table Number:</span>
-          <input
-            type="number" value={newTableNumber} onChange={e => setNewTableNumber(e.target.value)}
-            placeholder="e.g. 7"
-            className="w-24 px-3 py-1.5 border border-indigo-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-            autoFocus
-          />
-          <button onClick={handleAddTable} className="px-4 py-1.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition">Add</button>
-          <button onClick={() => { setAddingTable(false); setNewTableNumber(''); }} className="px-4 py-1.5 bg-gray-200 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-300 transition">Cancel</button>
+        <div className="bg-indigo-50 border-2 border-indigo-200 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center gap-4 animate-in slide-in-from-top-4 duration-200">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <span className="text-sm font-black text-indigo-700 uppercase tracking-widest whitespace-nowrap">Table #:</span>
+            <input
+              type="number" value={newTableNumber} onChange={e => setNewTableNumber(e.target.value)}
+              placeholder="e.g. 7"
+              className="flex-1 sm:w-24 px-4 py-2 bg-white border-2 border-indigo-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all"
+              autoFocus
+            />
+          </div>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <button onClick={handleAddTable} className="flex-1 sm:flex-none px-8 py-2 bg-indigo-600 text-white rounded-xl text-sm font-black hover:bg-indigo-700 shadow-md transition-all active:scale-95">Add</button>
+            <button onClick={() => { setAddingTable(false); setNewTableNumber(''); }} className="flex-1 sm:flex-none px-6 py-2 bg-white border border-gray-200 text-gray-500 rounded-xl text-sm font-black hover:bg-gray-50 transition-all active:scale-95">Cancel</button>
+          </div>
         </div>
       )}
 
@@ -118,9 +142,18 @@ export const TablesManager = ({ tables = [], orders = [], restaurantId, onToast,
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center">
+                  <div className="text-center relative">
                     <p className="font-extrabold text-gray-900 text-lg">T{table.number}</p>
                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${style.badge}`}>{style.label}</span>
+                    
+                    {/* Active Request Icons */}
+                    <div className="absolute -top-10 -right-2 flex flex-col gap-1 items-center">
+                      {requests.filter(r => r.tableId === table._id).map(r => (
+                        <span key={r._id} className="text-lg animate-bounce" title={`${r.type} requested`}>
+                          {r.type === 'water' ? '💧' : r.type === 'waiter' ? '🔔' : '🧾'}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
@@ -155,6 +188,14 @@ export const TablesManager = ({ tables = [], orders = [], restaurantId, onToast,
                         <button onClick={() => freeTable(table)} className="flex-1 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-xs font-bold hover:bg-emerald-200 transition">✓ Free</button>
                       )}
                     </div>
+                    {requests.some(r => r.tableId === table._id) && (
+                      <button
+                        onClick={() => clearRequestsForTable(table._id)}
+                        className="w-full py-1.5 bg-blue-100 text-blue-700 rounded-lg text-xs font-bold hover:bg-blue-200 transition"
+                      >
+                        ✨ Clear Requests
+                      </button>
+                    )}
                   </div>
                 </div>
               )}

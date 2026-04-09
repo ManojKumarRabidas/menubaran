@@ -77,15 +77,15 @@ export default function CartPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
-      <div className="max-w-3xl mx-auto px-4 py-8">
-        <div className="mb-8">
+      <div className="max-w-3xl mx-auto px-4 py-6 sm:py-8">
+        <div className="mb-6 sm:mb-8">
           <button
             onClick={() => navigate(`/menu/${restaurantId}/table/${tableId}`)}
-            className="text-amber-600 font-semibold mb-4 hover:text-amber-700 flex items-center gap-1"
+            className="text-amber-600 font-semibold mb-2 sm:mb-4 hover:text-amber-700 flex items-center gap-1 text-sm sm:text-base"
           >
             ← Back to Menu
           </button>
-          <h1 className="text-3xl font-bold text-gray-900">Your Order</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Your Order</h1>
         </div>
 
         {toast && (
@@ -95,45 +95,46 @@ export default function CartPage() {
         )}
 
         {/* Order Items */}
-        <div className="bg-white rounded-lg shadow-md mb-6 overflow-hidden">
-          <div className="divide-y divide-gray-200">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 mb-6 overflow-hidden">
+          <div className="divide-y divide-gray-100">
             {items.map((item, idx) => (
-              <div key={idx} className="p-4 flex items-center justify-between">
+              <div key={idx} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex-1">
-                  <h3 className="font-bold text-gray-900">{item.name}</h3>
+                  <h3 className="font-bold text-gray-900 text-base sm:text-lg">{item.name}</h3>
                   {item.note && (
-                    <p className="text-sm text-gray-600 italic">{item.note}</p>
+                    <p className="text-sm text-gray-500 italic mt-1 bg-amber-50 px-2 py-1 rounded inline-block">“{item.note}”</p>
                   )}
-                  <p className="text-sm text-gray-500">₹{item.price.toFixed(0)} each</p>
+                  <p className="text-sm text-gray-400 mt-1">₹{item.price.toFixed(0)} / each</p>
                 </div>
-
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+                
+                <div className="flex items-center justify-between sm:justify-end gap-4 min-w-[140px]">
+                  <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
                     <button
                       onClick={() => updateQty(item.menuItemId, item.qty - 1)}
-                      className="px-2 py-1 font-bold hover:bg-gray-200 rounded transition"
+                      className="w-8 h-8 flex items-center justify-center font-bold hover:bg-gray-200 rounded-lg transition active:scale-90"
                     >
                       −
                     </button>
-                    <span className="w-6 text-center font-bold">{item.qty}</span>
+                    <span className="w-8 text-center font-bold text-sm">{item.qty}</span>
                     <button
                       onClick={() => updateQty(item.menuItemId, item.qty + 1)}
-                      className="px-2 py-1 font-bold hover:bg-gray-200 rounded transition"
+                      className="w-8 h-8 flex items-center justify-center font-bold hover:bg-gray-200 rounded-lg transition active:scale-90"
                     >
                       +
                     </button>
                   </div>
 
-                  <p className="font-bold text-lg text-orange-600 w-20 text-right">
-                    ₹{(item.price * item.qty).toFixed(0)}
-                  </p>
-
-                  <button
-                    onClick={() => removeItem(item.menuItemId)}
-                    className="text-red-600 font-bold hover:text-red-700 px-2"
-                  >
-                    ×
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <p className="font-extrabold text-lg text-amber-600 min-w-[60px] text-right">
+                      ₹{(item.price * item.qty).toFixed(0)}
+                    </p>
+                    <button
+                      onClick={() => removeItem(item.menuItemId)}
+                      className="w-8 h-8 flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition active:scale-95"
+                    >
+                      ✕
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}

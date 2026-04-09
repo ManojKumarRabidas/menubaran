@@ -38,6 +38,11 @@ import {
   updateOrderStatus,
   processPayment,
 } from '../controllers/orderController.js';
+import {
+  getPendingRequestsByRestaurant,
+  clearRequest,
+  clearTableRequests,
+} from '../controllers/requestController.js';
 
 const router = express.Router();
 
@@ -87,5 +92,10 @@ router.get('/orders/:_id', getOrderById);
 router.post('/orders', placeOrder);
 router.patch('/orders/:_id/status', updateOrderStatus);
 router.post('/orders/:_id/payment', processPayment);
+
+// ── Table Requests ────────────────────────────────────────────────────────────
+router.get('/restaurants/:restaurantId/requests', getPendingRequestsByRestaurant);
+router.patch('/requests/:_id/clear', clearRequest);
+router.post('/tables/clear-requests', clearTableRequests);
 
 export default router;

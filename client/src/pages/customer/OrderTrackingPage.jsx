@@ -155,9 +155,12 @@ export default function OrderTrackingPage() {
 
           {/* Header */}
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900">Your Orders</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Your Orders</h1>
             {currentOrder?.tableNumber && (
-              <p className="text-gray-500 text-sm mt-1">Table {currentOrder.tableNumber}</p>
+              <p className="text-gray-500 text-sm mt-1 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                Table {currentOrder.tableNumber}
+              </p>
             )}
           </div>
 
@@ -233,13 +236,15 @@ function OrderCard({ order, onRequestBill, onOrderAgain }) {
   return (
     <div>
       {/* Title */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1 leading-tight">
           Order #{String(order._id).slice(-6).toUpperCase()}
         </h1>
-        <p className="text-gray-500 text-sm">
-          Table {order.tableNumber} &bull; {new Date(order.createdAt).toLocaleTimeString()}
-        </p>
+        <div className="flex items-center gap-2 text-gray-500 text-xs sm:text-sm">
+          <span>Table {order.tableNumber}</span>
+          <span>&bull;</span>
+          <span>{new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+        </div>
       </div>
 
       {/* Status tracker */}
@@ -248,25 +253,26 @@ function OrderCard({ order, onRequestBill, onOrderAgain }) {
       </div>
 
       {/* Items */}
-      <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Order Items</h2>
-        <div className="space-y-3">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-6 mb-8">
+        <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4">Order Summary</h2>
+        <div className="space-y-4">
           {order.items.map((item, idx) => (
-            <div key={idx} className="flex items-center justify-between py-3 border-b border-gray-200 last:border-b-0">
-              <div className="flex-1">
-                <p className="font-semibold text-gray-900">{item.name}</p>
-                {item.note && <p className="text-sm text-gray-500 italic">{item.note}</p>}
+            <div key={idx} className="flex items-start justify-between py-1 border-b border-gray-50 last:border-b-0 pb-3 last:pb-0">
+              <div className="flex-1 pr-4">
+                <p className="font-bold text-gray-900 text-sm sm:text-base leading-tight">{item.name}</p>
+                {item.note && <p className="text-xs text-gray-400 italic mt-0.5">Note: {item.note}</p>}
+                <p className="text-xs text-gray-400 mt-1 sm:hidden">₹{(item.price * item.qty).toFixed(0)}</p>
               </div>
               <div className="flex items-center gap-4">
-                <span className="font-semibold text-gray-700">×{item.qty}</span>
-                <span className="font-bold text-orange-600">₹{(item.price * item.qty).toFixed(0)}</span>
+                <span className="font-bold text-gray-500 text-sm">×{item.qty}</span>
+                <span className="font-extrabold text-amber-600 hidden sm:block">₹{(item.price * item.qty).toFixed(0)}</span>
               </div>
             </div>
           ))}
         </div>
-        <div className="mt-6 pt-4 border-t border-gray-300 flex items-center justify-between">
-          <span className="text-lg font-bold text-gray-900">Total</span>
-          <span className="text-2xl font-bold text-orange-600">₹{order.totalAmount.toFixed(0)}</span>
+        <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between">
+          <span className="text-base sm:text-lg font-bold text-gray-900">Total Amount</span>
+          <span className="text-2xl sm:text-3xl font-extrabold text-amber-600">₹{order.totalAmount.toFixed(0)}</span>
         </div>
       </div>
 

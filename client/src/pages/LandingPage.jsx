@@ -47,25 +47,25 @@ export default function LandingPage() {
 
       {/* ── NAV ── */}
       <nav className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-md">
-              <span className="text-white text-base">🍽️</span>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-md">
+              <span className="text-white text-sm sm:text-base">🍽️</span>
             </div>
-            <span className="text-xl font-extrabold text-gray-900 tracking-tight">MenuBaran</span>
+            <span className="text-lg sm:text-xl font-extrabold text-gray-900 tracking-tight">MenuBaran</span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={() => navigate('/staff/login')}
-              className="px-4 py-2 text-sm font-semibold text-gray-700 hover:text-amber-600 transition"
+              className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-gray-700 hover:text-amber-600 transition"
             >
               Sign In
             </button>
             <button
               onClick={() => navigate('/register')}
-              className="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-bold rounded-xl shadow-sm transition active:scale-95"
+              className="px-4 sm:px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-sm transition active:scale-95"
             >
-              Get Started →
+              Get Started
             </button>
           </div>
         </div>
@@ -77,32 +77,39 @@ export default function LandingPage() {
         <div className="absolute -top-24 -right-24 w-96 h-96 bg-amber-100 rounded-full opacity-50 blur-3xl pointer-events-none" />
         <div className="absolute -bottom-16 -left-16 w-72 h-72 bg-orange-100 rounded-full opacity-40 blur-3xl pointer-events-none" />
 
-        <div className="relative max-w-6xl mx-auto px-6 pt-20 pb-24 text-center">
-          <span className="inline-block bg-amber-100 text-amber-700 text-xs font-bold px-4 py-1.5 rounded-full mb-6 tracking-wide uppercase">
+        <div className="relative max-w-6xl mx-auto px-6 pt-16 sm:pt-20 pb-20 sm:pb-24 text-center">
+          <span className="inline-block bg-amber-100 text-amber-700 text-[10px] sm:text-xs font-bold px-3 sm:px-4 py-1.5 rounded-full mb-6 tracking-wide uppercase">
             🚀 Digital ordering platform for restaurants
           </span>
-          <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 leading-tight mb-6">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-gray-900 leading-tight mb-6">
             Your menu,<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-600">
               beautifully digital.
             </span>
           </h1>
-          <p className="text-lg text-gray-500 max-w-2xl mx-auto mb-10 leading-relaxed">
+          <p className="text-base sm:text-lg text-gray-500 max-w-2xl mx-auto mb-10 leading-relaxed px-4">
             MenuBaran turns any restaurant into a smart, QR-driven dining experience —
             from order to kitchen to payment — all in real time.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center px-4">
             <button
               onClick={() => navigate('/register')}
-              className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 text-base"
+              className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 text-base"
             >
               Start Free Trial
             </button>
             <button
-              onClick={() => navigate('/menu/rest_1/table/table_1')}
-              className="px-8 py-4 border-2 border-gray-200 hover:border-amber-400 text-gray-700 hover:text-amber-700 font-bold rounded-2xl transition-all duration-200 text-base"
+              onClick={() => navigate('/guide')}
+              className="w-full sm:w-auto px-8 py-4 bg-white border-2 border-slate-200 hover:border-indigo-400 text-slate-700 hover:text-indigo-700 font-bold rounded-2xl transition-all duration-200 text-base flex items-center justify-center gap-2 group shadow-sm"
             >
-              👀 View Demo Menu
+              <span className="group-hover:rotate-12 transition-transform">📖</span>
+              See How it Works
+            </button>
+            <button
+              onClick={() => navigate('/menu/rest_1/table/table_1')}
+              className="w-full sm:w-auto px-8 py-4 border-2 border-gray-100 hover:border-amber-400 text-gray-500 hover:text-amber-700 font-bold rounded-2xl transition-all duration-200 text-base"
+            >
+               View Demo Menu
             </button>
           </div>
         </div>
@@ -150,6 +157,14 @@ export default function LandingPage() {
                 <p className="text-sm text-gray-500 leading-relaxed">{s.desc}</p>
               </div>
             ))}
+          </div>
+          <div className="mt-16">
+            <button
+              onClick={() => navigate('/guide')}
+              className="px-8 py-3 bg-white border-2 border-amber-200 text-amber-700 font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-amber-600 hover:text-white hover:border-amber-600 transition-all active:scale-95 shadow-lg shadow-amber-100/50"
+            >
+              Explore Full Step-by-Step Guide →
+            </button>
           </div>
         </div>
       </section>

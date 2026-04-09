@@ -128,26 +128,26 @@ export default function KitchenDisplayPage() {
       <div className="min-h-screen bg-gray-50">
 
         {/* Header */}
-        <header className="sticky top-0 z-20 bg-white border-b border-gray-200 shadow-sm px-6 py-3 flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-extrabold text-gray-900">🔥 Kitchen Display System</h1>
-            <p className="text-xs text-gray-500">Manage orders and track meal prep</p>
-          </div>
+        <header className="sticky top-0 z-20 bg-white border-b border-gray-100 shadow-sm px-4 sm:px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="hidden sm:flex items-center gap-1.5 text-sm text-gray-500">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
+            <h1 className="text-lg sm:text-xl font-extrabold text-gray-900 leading-tight">🔥 Kitchen</h1>
+            <span className="hidden sm:inline-block text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Live</span>
+          </div>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <span className="hidden xs:flex items-center gap-1 text-xs text-gray-400">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
               Live
             </span>
             <button
               onClick={() => setShowProfile(true)}
-              className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-rose-500 flex items-center justify-center text-white font-extrabold text-sm hover:ring-2 hover:ring-orange-300 transition"
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-orange-400 to-rose-500 flex items-center justify-center text-white font-extrabold text-xs sm:text-sm hover:ring-2 hover:ring-orange-300 transition"
               title="My Profile"
             >
               {(user?.name || '?')[0]}
             </button>
             <button
               onClick={() => { logout(); navigate('/staff/login'); }}
-              className="px-3 py-2 rounded-xl text-sm font-bold text-red-500 hover:bg-red-50 transition"
+              className="p-2 sm:px-3 sm:py-2 rounded-xl text-lg sm:text-sm font-bold text-red-500 hover:bg-red-50 transition"
               title="Logout"
             >
               🚪
@@ -156,22 +156,24 @@ export default function KitchenDisplayPage() {
         </header>
 
         {/* Filter Tabs */}
-        <div className="bg-white border-b border-gray-200 px-6 py-3 flex gap-2">
-          {FILTER_OPTIONS.map(option => (
-            <button
-              key={option}
-              onClick={() => setFilter(option)}
-              className={`px-5 py-1.5 rounded-full text-sm font-semibold capitalize transition-all ${filter === option
-                ? FILTER_STYLES[option]
-                : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                }`}
-            >
-              {option}
-              <span className="ml-1.5 text-xs opacity-80">
-                ({option === 'all' ? orders.length : orders.filter(o => o.status === option).length})
-              </span>
-            </button>
-          ))}
+        <div className="bg-white border-b border-gray-100 px-4 sm:px-6 py-2 overflow-x-auto no-scrollbar">
+          <div className="flex gap-2 min-w-max">
+            {FILTER_OPTIONS.map(option => (
+              <button
+                key={option}
+                onClick={() => setFilter(option)}
+                className={`px-4 sm:px-5 py-1.5 rounded-xl text-xs sm:text-sm font-bold capitalize transition-all whitespace-nowrap ${filter === option
+                  ? FILTER_STYLES[option]
+                  : 'bg-gray-50 text-gray-400 hover:bg-gray-100 border border-gray-100'
+                  }`}
+              >
+                {option}
+                <span className="ml-1.5 opacity-60 font-mono">
+                  {option === 'all' ? orders.length : orders.filter(o => o.status === option).length}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Orders Grid */}

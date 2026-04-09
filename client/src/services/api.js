@@ -168,6 +168,27 @@ export const updateTableStatus = async (tableId, status) => {
   return updateTable(tableId, { status });
 };
 
+export const getPendingRequestsByRestaurant = async (restaurantId) => {
+  try {
+    if (!restaurantId) return { data: [] };
+    const res = await api(`/api/restaurants/${restaurantId}/requests`);
+    return { data: res.success ? res.docs : [] };
+  } catch {
+    return { data: [] };
+  }
+};
+
+export const clearTableRequest = async (requestId) => {
+  try {
+    const res = await api(`/api/requests/${requestId}/clear`, {
+      method: 'PATCH',
+    });
+    return { success: res.success };
+  } catch {
+    return { success: false };
+  }
+};
+
 // ── Orders ────────────────────────────────────────────────────────────────────
 
 export const placeOrder = async (orderPayload) => {

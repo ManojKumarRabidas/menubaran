@@ -8,7 +8,7 @@ import { LoadingSpinner } from '../../components/common/LoadingSpinner.jsx';
 import { UserProfilePanel } from '../../components/common/UserProfilePanel.jsx';
 import { useAuth } from '../../hooks/useAuth.js';
 import { useSocket } from '../../hooks/useSocket.js';
-import { getTablesByRestaurant, getTodaysOrdersByRestaurant, updateOrderStatus } from '../../services/api.js';
+import { getTablesByRestaurant, getTodaysOrdersByRestaurant, updateOrderStatus, getPendingRequestsByRestaurant, clearTableRequest } from '../../services/api.js';
 
 export default function WaiterFloorPage() {
   const { user, logout } = useAuth();
@@ -53,10 +53,24 @@ export default function WaiterFloorPage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const tablesRes = await getTablesByRestaurant(user?.restaurantId);
-        const ordersRes = await getTodaysOrdersByRestaurant(user?.restaurantId);
+        const [tablesRes, ordersRes, requestsRes] = await Promise.all([
+          getTablesByRestaurant(user?.restaurantId),
+          getTodaysOrdersByRestaurant(user?.restaurantId),
+          getPendingRequestsByRestaurant(user?.restaurantId),
+        ]);
         setTables(tablesRes.data || []);
         setOrders(ordersRes.data || []);
+        
+        const initialNotifications = (requestsRes.data || []).map(req => ({
+          id: req._id,
+          type: req.type,
+          tableId: req.tableId,
+          tableNumber: req.tableNumber,
+          message: `${req.type === 'bill' ? 'Bill' : req.type === 'water' ? 'Water' : 'Waiter'} requested — Table ${req.tableNumber}`,
+          timestamp: new Date(req.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        }));
+        setNotifications(initialNotifications);
+        
         setLoading(false);
       } catch (err) {
         setLoading(false);
@@ -118,46 +132,74 @@ export default function WaiterFloorPage() {
 
   // Listen for bill requests
   useEffect(() => {
-    const handleBillRequest = (data) => {
+    socket.on('table:requestBill', (data) => {
       if (data.restaurantId === user?.restaurantId) {
         const notification = {
+          id: data.requestId,
           type: 'bill',
+          tableId: data.tableId,
+          tableNumber: data.tableNumber,
           message: `Bill requested — Table ${data.tableNumber}`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          onDismiss: () => dismissNotification(0)
         };
         setNotifications(prev => [notification, ...prev]);
+        playBeep();
       }
-    };
+    });
 
-    socket.on('table:requestBill', handleBillRequest);
-    return () => {
-      socket.off('table:requestBill', handleBillRequest);
-    };
-  }, [user?.restaurantId, socket]);
-
-  // Listen for water requests
-  useEffect(() => {
-    const handleWaterRequest = (data) => {
+    socket.on('table:requestWater', (data) => {
       if (data.restaurantId === user?.restaurantId) {
         const notification = {
+          id: data.requestId,
           type: 'water',
+          tableId: data.tableId,
+          tableNumber: data.tableNumber,
           message: `Water requested — Table ${data.tableNumber}`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          onDismiss: () => dismissNotification(0)
         };
         setNotifications(prev => [notification, ...prev]);
+        playBeep();
       }
-    };
+    });
 
-    socket.on('table:requestWater', handleWaterRequest);
+    socket.on('table:requestWaiter', (data) => {
+      if (data.restaurantId === user?.restaurantId) {
+        const notification = {
+          id: data.requestId,
+          type: 'waiter',
+          tableId: data.tableId,
+          tableNumber: data.tableNumber,
+          message: `Waiter requested — Table ${data.tableNumber}`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        };
+        setNotifications(prev => [notification, ...prev]);
+        playBeep();
+      }
+    });
+
+    socket.on('table:requestCleared', (data) => {
+      if (data.restaurantId === user?.restaurantId) {
+        setNotifications(prev => prev.filter(n => n.id !== data.requestId));
+      }
+    });
+
     return () => {
-      socket.off('table:requestWater', handleWaterRequest);
+      socket.off('table:requestBill');
+      socket.off('table:requestWater');
+      socket.off('table:requestWaiter');
+      socket.off('table:requestCleared');
     };
   }, [user?.restaurantId, socket]);
 
-  const dismissNotification = (idx) => {
-    setNotifications(prev => prev.filter((_, i) => i !== idx));
+  const dismissNotification = async (id) => {
+    if (!id) return;
+    try {
+      await clearTableRequest(id);
+      socket.emit('table:clearRequest', { requestId: id, restaurantId: user?.restaurantId });
+      setNotifications(prev => prev.filter(n => n.id !== id));
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const handleTableClick = (table) => {
@@ -291,7 +333,10 @@ export default function WaiterFloorPage() {
           {(!isMobile || activeTab === 'notifications') && (
             <div className={`${isMobile ? '' : 'w-96'} p-6 border-t md:border-t-0 md:border-l border-gray-200`}>
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Live Alerts</h2>
-              <NotificationPanel notifications={notifications} />
+              <NotificationPanel 
+                notifications={notifications} 
+                onDismiss={dismissNotification}
+              />
             </div>
           )}
         </div>

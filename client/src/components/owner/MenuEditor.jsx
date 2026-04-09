@@ -30,7 +30,6 @@ export const MenuEditor = ({ items = [], categories = [], restaurantId, onToast,
   const fileInputRef = useRef(null);
 
   const filtered = items.filter(item => {
-    console.log(item)
     const matchCat = activeCat === 'all' || item.categoryId === activeCat;
     const matchSearch = item.name.toLowerCase().includes(search.toLowerCase());
     return matchCat && matchSearch;
@@ -41,7 +40,6 @@ export const MenuEditor = ({ items = [], categories = [], restaurantId, onToast,
   const closeAdd = () => { setShowAddModal(false); setNewItem(BLANK_NEW); setAddEmojiOpen(false); };
 
   const saveNewItem = async () => {
-    console.log("newitem", newItem);
     const name = newItem.name?.trim();
     const price = parseFloat(newItem.price);
     if (!name) { onToast?.('Please enter item name', 'error'); return; }
@@ -192,10 +190,7 @@ export const MenuEditor = ({ items = [], categories = [], restaurantId, onToast,
         if (res.success) {
           onToast?.(`Succesfully uploaded ${res.count} items!`, 'success');
           onItemsChange(prev => [...prev, ...res.docs]);
-          // If we created new categories, we should ideally refresh them too, 
-          // but for now we expect the user to refresh or the parent to handle it.
-          // Better: tell parent something changed that might involve categories.
-          setTimeout(() => window.location.reload(), 1500); // Simple hack to refresh categories
+          setTimeout(() => window.location.reload(), 1500); 
         } else {
           onToast?.(res.error || 'Failed to upload items', 'error');
         }
@@ -239,86 +234,91 @@ export const MenuEditor = ({ items = [], categories = [], restaurantId, onToast,
   return (
     <div className="space-y-4">
       {/* ── Controls bar ── */}
-      <div className="bg-white rounded-2xl shadow-md p-4 flex flex-wrap gap-3 items-center">
-        {/* Search */}
-        <div className="relative flex-1 min-w-48">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
-          <input
-            type="text" value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Search items..."
-            className="w-full pl-8 pr-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-          />
-        </div>
-
-        {/* Category filter pills */}
-        <div className="flex gap-2 flex-wrap">
-          <button
-            onClick={() => setActiveCat('all')}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold transition ${activeCat === 'all' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-          >All</button>
-          {categories.map(cat => (
-            <button
-              key={cat._id}
-              onClick={() => setActiveCat(cat._id)}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition ${activeCat === cat._id ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-            >
-              {cat.icon} {cat.name}
-            </button>
-          ))}
-        </div>
-
-        {/* Add new item */}
-        <button
-          onClick={openAdd}
-          className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition flex items-center gap-2 shadow"
-        >
-          <span className="text-lg leading-none">＋</span> Add Item
-        </button>
-
-        {/* Excel Bulk Upload */}
-        <div className="flex gap-1">
-          <button
-            onClick={downloadSampleExcel}
-            className="px-3 py-2 bg-gray-100 text-gray-700 rounded-xl text-xs font-semibold hover:bg-gray-200 transition border border-gray-200 flex items-center gap-1.5"
-            title="Download Sample Excel"
-          >
-            <span>📥</span> Sample
-          </button>
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading}
-            className={`px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 transition flex items-center gap-2 shadow ${isUploading ? 'opacity-60 cursor-not-allowed' : ''}`}
-          >
-            {isUploading ? '⌛ Uploading...' : <><span>📊</span> Excel Upload</>}
-          </button>
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleExcelUpload}
-            accept=".xlsx, .xls"
-            className="hidden"
-          />
-        </div>
-
-        {/* Bulk edit */}
-        {!bulkMode ? (
-          <button
-            onClick={() => setBulkMode(true)}
-            className="px-4 py-2 bg-amber-500 text-white rounded-xl text-sm font-semibold hover:bg-amber-600 transition flex items-center gap-2"
-          >
-            <span>⚡</span> Bulk Price Edit
-          </button>
-        ) : (
-          <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
-            <span className="text-sm text-amber-700 font-medium">Adjust by</span>
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 space-y-4">
+        <div className="flex flex-col sm:flex-row gap-3">
+          {/* Search */}
+          <div className="relative flex-1">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
             <input
-              type="number" value={bulkPct} onChange={e => setBulkPct(e.target.value)}
-              placeholder="e.g. -10 or +5"
-              className="w-24 px-2 py-1 border border-amber-300 rounded-lg text-sm focus:outline-none"
+              type="text" value={search} onChange={e => setSearch(e.target.value)}
+              placeholder="Search dishes..."
+              className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all"
             />
-            <span className="text-sm text-amber-700">%</span>
-            <button onClick={applyBulkPrice} className="px-3 py-1 bg-amber-500 text-white rounded-lg text-xs font-bold hover:bg-amber-600 transition">Apply</button>
-            <button onClick={() => { setBulkMode(false); setBulkPct(''); }} className="px-3 py-1 bg-gray-200 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-300 transition">Cancel</button>
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              onClick={openAdd}
+              className="flex-1 sm:flex-none px-5 py-2 bg-indigo-600 text-white rounded-xl text-sm font-black hover:bg-indigo-700 transition shadow-lg shadow-indigo-200 active:scale-95"
+            >
+              ＋ Add Dish
+            </button>
+            <button
+              onClick={() => setBulkMode(!bulkMode)}
+              className={`p-2 rounded-xl border-2 transition-all ${bulkMode ? 'bg-amber-500 border-amber-500 text-white shadow-lg' : 'bg-white border-gray-100 text-gray-400 hover:border-amber-200'}`}
+              title="Bulk Price Edit"
+            >
+              ⚡
+            </button>
+          </div>
+        </div>
+
+        {/* Filters and Excel row */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          {/* Category filter pills */}
+          <div className="flex gap-1.5 overflow-x-auto pb-2 no-scrollbar min-w-0">
+            <button
+              onClick={() => setActiveCat('all')}
+              className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition whitespace-nowrap border ${activeCat === 'all' ? 'bg-indigo-600 border-indigo-600 text-white shadow-md' : 'bg-white border-gray-100 text-gray-500 hover:bg-gray-50'}`}
+            >All</button>
+            {categories.map(cat => (
+              <button
+                key={cat._id}
+                onClick={() => setActiveCat(cat._id)}
+                className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition whitespace-nowrap border ${activeCat === cat._id ? 'bg-indigo-600 border-indigo-600 text-white shadow-md' : 'bg-white border-gray-100 text-gray-500 hover:bg-gray-50'}`}
+              >
+                {cat.icon} {cat.name}
+              </button>
+            ))}
+          </div>
+
+          {/* Excel Actions */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={downloadSampleExcel}
+              className="flex-1 sm:flex-none px-4 py-2 bg-gray-50 text-gray-500 rounded-xl text-[10px] font-black uppercase border border-gray-100 hover:bg-gray-100 transition"
+              title="Download Sample"
+            >
+              Sample 📥
+            </button>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              className={`flex-[2] sm:flex-none px-5 py-2 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase shadow-lg shadow-emerald-100 hover:bg-emerald-700 transition active:scale-95 ${isUploading ? 'opacity-60 cursor-not-allowed' : ''}`}
+            >
+              {isUploading ? 'Processing...' : 'Excel Upload 📊'}
+            </button>
+          </div>
+        </div>
+
+        {/* Bulk edit panel */}
+        {bulkMode && (
+          <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row items-center gap-4 animate-in slide-in-from-top-4 duration-300">
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <span className="text-xs font-black text-amber-700 uppercase tracking-widest whitespace-nowrap">Price Adjustment:</span>
+              <div className="relative flex-1 sm:w-28">
+                <input
+                  type="number" value={bulkPct} onChange={e => setBulkPct(e.target.value)}
+                  placeholder="+5 or -10"
+                  className="w-full px-4 py-2 bg-white border-2 border-amber-200 rounded-xl text-sm font-black focus:outline-none focus:ring-4 focus:ring-amber-100 transition-all placeholder:font-normal placeholder:text-gray-300"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-amber-600 font-black">%</span>
+              </div>
+            </div>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <button onClick={applyBulkPrice} className="flex-1 sm:flex-none px-8 py-2 bg-amber-500 text-white rounded-xl text-xs font-black hover:bg-amber-600 shadow-md transition-all active:scale-95">Apply Update</button>
+              <button onClick={() => { setBulkMode(false); setBulkPct(''); }} className="flex-1 sm:flex-none px-4 py-2 bg-white border border-amber-200 text-amber-600 rounded-xl text-xs font-black hover:bg-amber-100 transition-all">Cancel</button>
+            </div>
           </div>
         )}
       </div>
@@ -453,7 +453,7 @@ export const MenuEditor = ({ items = [], categories = [], restaurantId, onToast,
             </div>
 
             {/* Modal body */}
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar">
               {/* Emoji */}
               <div>
                 <label className="text-xs font-semibold text-gray-500 mb-1 block">Emoji / Icon</label>
@@ -461,8 +461,8 @@ export const MenuEditor = ({ items = [], categories = [], restaurantId, onToast,
                   <span
                     className="text-3xl cursor-pointer border-2 border-dashed border-indigo-300 rounded-xl p-2 hover:border-indigo-500 transition"
                     onClick={() => setAddEmojiOpen(o => !o)}
-                  >{newItem.emoji}</span>
-                  <span className="text-xs text-gray-500">Click to pick an emoji</span>
+                  >{newItem.emoji || '🍽️'}</span>
+                  <span className="text-xs text-gray-500">Click to pick icon</span>
                 </div>
                 {addEmojiOpen && (
                   <EmojiGrid onSelect={e => { setNewItem(n => ({ ...n, emoji: e })); setAddEmojiOpen(false); }} />
@@ -476,7 +476,7 @@ export const MenuEditor = ({ items = [], categories = [], restaurantId, onToast,
                   type="text" value={newItem.name}
                   onChange={e => setNewItem(n => ({ ...n, name: e.target.value }))}
                   placeholder="e.g. Paneer Tikka"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all"
                 />
               </div>
 
@@ -484,12 +484,12 @@ export const MenuEditor = ({ items = [], categories = [], restaurantId, onToast,
               <div>
                 <label className="text-xs font-semibold text-gray-500 mb-1 block">Price (₹) <span className="text-red-400">*</span></label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold">₹</span>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">₹</span>
                   <input
                     type="number" value={newItem.price} step="0.01" min="0"
                     onChange={e => setNewItem(n => ({ ...n, price: e.target.value }))}
                     placeholder="0.00"
-                    className="w-full pl-7 pr-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    className="w-full pl-8 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all"
                   />
                 </div>
               </div>
@@ -508,13 +508,13 @@ export const MenuEditor = ({ items = [], categories = [], restaurantId, onToast,
                   rows={2} value={newItem.description}
                   onChange={e => setNewItem(n => ({ ...n, description: e.target.value }))}
                   placeholder="Short description..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"
+                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all resize-none"
                 />
               </div>
 
               {/* Available toggle */}
               <div className="flex items-center gap-3">
-                <span className="text-xs font-semibold text-gray-500">Available immediately</span>
+                <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Available:</span>
                 <button
                   type="button"
                   onClick={() => setNewItem(n => ({ ...n, isAvailable: !n.isAvailable }))}
@@ -522,25 +522,22 @@ export const MenuEditor = ({ items = [], categories = [], restaurantId, onToast,
                 >
                   <span className={`inline-block h-5 w-5 bg-white rounded-full shadow transition-transform ${newItem.isAvailable ? 'translate-x-5' : 'translate-x-1'}`}></span>
                 </button>
-                <span className={`text-xs font-semibold ${newItem.isAvailable ? 'text-emerald-600' : 'text-gray-400'}`}>
-                  {newItem.isAvailable ? 'Yes' : 'No'}
-                </span>
               </div>
             </div>
 
             {/* Modal footer */}
-            <div className="px-6 pb-6 flex gap-3">
+            <div className="px-6 py-6 bg-gray-50 flex gap-3">
+              <button
+                onClick={closeAdd}
+                className="flex-1 py-3 bg-white border border-gray-200 text-gray-500 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-gray-50 active:scale-95 transition-all"
+              >Cancel</button>
               <button
                 onClick={saveNewItem}
                 disabled={saving}
-                className="flex-1 py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition disabled:opacity-60"
+                className="flex-[2] py-3 bg-indigo-600 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all active:scale-95 disabled:opacity-60"
               >
-                {saving ? 'Adding…' : '＋ Add Item'}
+                {saving ? 'Adding Dish…' : '＋ Add to Menu'}
               </button>
-              <button
-                onClick={closeAdd}
-                className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-bold text-sm hover:bg-gray-200 transition"
-              >Cancel</button>
             </div>
           </div>
         </div>

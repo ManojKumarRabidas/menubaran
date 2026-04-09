@@ -23,6 +23,7 @@ import OwnerDashboardPage from './pages/staff/OwnerDashboardPage.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx'; // hypothetical admin dashboard page
 
 // Common Pages
+import UserGuidePage from './pages/UserGuidePage.jsx';
 import NotFoundPage from './pages/NotFoundPage.jsx';
 
 function App() {
@@ -57,6 +58,7 @@ function App() {
               <Route path="/qr/:restaurantId/:tableId" element={<QRPrintPage />} />
 
               {/* 404 */}
+              <Route path="/guide" element={<UserGuidePage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </OrderProvider>

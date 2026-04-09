@@ -8,6 +8,7 @@ import mongoose from 'mongoose';
 import routes from './routes/index.js';
 import { runSeed } from './scripts/seed.js';
 import dotenv from 'dotenv';
+import TableRequest from './models/TableRequest.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -106,6 +107,60 @@ io.on('connection', (socket) => {
   console.log(`[Socket] Connected: ${socket.id} | IP: ${ip} | Active: ${count}`);
 
   // TODO: Define socket event handlers here
+  socket.on('table:requestWater', async (data) => {
+    try {
+      const { restaurantId, tableId, tableNumber } = data;
+      const request = await TableRequest.create({
+        restaurantId,
+        tableId,
+        tableNumber,
+        type: 'water',
+      });
+      io.emit('table:requestWater', { ...data, requestId: request._id });
+    } catch (err) {
+      console.error('[Socket] Water request failed:', err);
+    }
+  });
+
+  socket.on('table:requestWaiter', async (data) => {
+    try {
+      const { restaurantId, tableId, tableNumber } = data;
+      const request = await TableRequest.create({
+        restaurantId,
+        tableId,
+        tableNumber,
+        type: 'waiter',
+      });
+      io.emit('table:requestWaiter', { ...data, requestId: request._id });
+    } catch (err) {
+      console.error('[Socket] Waiter request failed:', err);
+    }
+  });
+
+  socket.on('table:requestBill', async (data) => {
+    try {
+      const { restaurantId, tableId, tableNumber } = data;
+      const request = await TableRequest.create({
+        restaurantId,
+        tableId,
+        tableNumber,
+        type: 'bill',
+      });
+      io.emit('table:requestBill', { ...data, requestId: request._id });
+    } catch (err) {
+      console.error('[Socket] Bill request failed:', err);
+    }
+  });
+
+  socket.on('table:clearRequest', async (data) => {
+    try {
+      const { requestId, restaurantId } = data;
+      await TableRequest.findByIdAndUpdate(requestId, { status: 'cleared' });
+      io.emit('table:requestCleared', data);
+    } catch (err) {
+      console.error('[Socket] Clear request failed:', err);
+    }
+  });
 
   socket.on('disconnect', () => {
     const remaining = (ipConnections.get(ip) ?? 1) - 1;
@@ -124,9 +179,25 @@ mongoose
   .then(async () => {
     console.log('[DB] Connected to MongoDB');
     await runSeed();
-    server.listen(PORT, () =>
-      console.log(`[Server] Running on http://localhost:${PORT}`)
-    );
+    server.listen(PORT, () => {
+      console.log(`[Server] Running on http://localhost:${PORT}`);
+      
+      // Auto-cleanup for table requests older than 2 hours
+      setInterval(async () => {
+        try {
+          const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+          const result = await TableRequest.deleteMany({
+            status: 'pending',
+            createdAt: { $lt: twoHoursAgo }
+          });
+          if (result.deletedCount > 0) {
+            console.log(`[Cleanup] Deleted ${result.deletedCount} old table requests`);
+          }
+        } catch (err) {
+          console.error('[Cleanup] Error clearing old requests:', err);
+        }
+      }, 10 * 60 * 1000); // Run every 10 minutes
+    });
   })
   .catch((err) => {
     console.error('[DB] Connection failed:', err.message);

@@ -99,8 +99,13 @@ export default function MenuPage() {
   };
 
   const handleCallWaiter = () => {
-    emitWithDelay('table:callWaiter', { tableId, tableNumber, restaurantId }, 100);
+    emitWithDelay('table:requestWaiter', { tableId, tableNumber, restaurantId }, 100);
     showToast('🔔 Waiter is on the way!', 'info');
+  };
+
+  const handleRequestBill = () => {
+    emitWithDelay('table:requestBill', { tableId, tableNumber, restaurantId }, 100);
+    showToast('🧾 Bill request sent!', 'info');
   };
 
   const handleCartClick = () => {
@@ -160,7 +165,7 @@ export default function MenuPage() {
       )}
 
       {/* Main Menu Grid */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-6 pb-36">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-4 py-6 pb-40 sm:pb-36">
         {filteredItems.length > 0 ? (
           <>
             <p className="text-xs text-gray-400 font-semibold uppercase tracking-widest mb-4">
@@ -185,25 +190,35 @@ export default function MenuPage() {
       </main>
 
       {/* Fixed Footer Action Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-100 shadow-[0_-2px_12px_rgba(0,0,0,0.06)] px-4 py-3">
-        <div className="max-w-xl mx-auto flex gap-3">
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-100 shadow-[0_-2px_12px_rgba(0,0,0,0.06)] px-2 sm:px-4 py-3">
+        <div className="max-w-xl mx-auto flex gap-1.5 sm:gap-3">
           <button
             onClick={handleRequestWater}
-            className="flex-1 flex items-center justify-center gap-2 py-3 bg-blue-50 border border-blue-200 text-blue-700 rounded-xl font-semibold text-sm hover:bg-blue-100 active:scale-95 transition-all duration-150"
+            className="flex-1 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 py-2 sm:py-3 bg-blue-50 border border-blue-100 text-blue-700 rounded-xl font-bold text-[10px] sm:text-xs hover:bg-blue-100 active:scale-95 transition-all duration-150"
           >
-            💧 Water
+            <span className="text-base sm:text-sm">💧</span>
+            <span className="leading-none">Water</span>
           </button>
           <button
             onClick={handleCallWaiter}
-            className="flex-1 flex items-center justify-center gap-2 py-3 bg-purple-50 border border-purple-200 text-purple-700 rounded-xl font-semibold text-sm hover:bg-purple-100 active:scale-95 transition-all duration-150"
+            className="flex-1 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 py-2 sm:py-3 bg-purple-50 border border-purple-100 text-purple-700 rounded-xl font-bold text-[10px] sm:text-xs hover:bg-purple-100 active:scale-95 transition-all duration-150"
           >
-            🔔 Waiter
+            <span className="text-base sm:text-sm">🔔</span>
+            <span className="leading-none">Waiter</span>
+          </button>
+          <button
+            onClick={handleRequestBill}
+            className="flex-1 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 py-2 sm:py-3 bg-amber-50 border border-amber-100 text-amber-700 rounded-xl font-bold text-[10px] sm:text-xs hover:bg-amber-100 active:scale-95 transition-all duration-150"
+          >
+            <span className="text-base sm:text-sm">🧾</span>
+            <span className="leading-none">Bill</span>
           </button>
           <button
             onClick={() => navigate(`/order?table=${tableId}&restaurant=${restaurantId}`)}
-            className="flex-1 flex items-center justify-center gap-2 py-3 bg-amber-50 border border-amber-200 text-amber-700 rounded-xl font-semibold text-sm hover:bg-amber-100 active:scale-95 transition-all duration-150"
+            className="flex-1 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 py-2 sm:py-3 bg-indigo-50 border border-indigo-100 text-indigo-700 rounded-xl font-bold text-[10px] sm:text-xs hover:bg-indigo-100 active:scale-95 transition-all duration-150"
           >
-            📋 My Orders
+            <span className="text-base sm:text-sm">📋</span>
+            <span className="leading-none truncate w-full px-1 text-center">Orders</span>
           </button>
         </div>
       </div>

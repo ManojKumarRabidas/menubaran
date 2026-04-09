@@ -122,24 +122,24 @@ const StaffFormModal = ({ member, onClose, onSave, existingEmails }) => {
   return (
     <Modal onClose={onClose}>
       {/* Header */}
-      <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100">
-        <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-xl ${form.avatarColor} flex items-center justify-center
-                           text-white font-extrabold text-lg shadow`}>
+      <div className="flex items-center justify-between px-5 sm:px-6 pt-5 sm:pt-6 pb-4 border-b border-gray-100">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl ${form.avatarColor} flex items-center justify-center
+                           text-white font-black text-lg sm:text-xl shadow-lg shadow-indigo-100`}>
             {form.name?.[0]?.toUpperCase() || '?'}
           </div>
           <div>
-            <h3 className="font-extrabold text-gray-900 text-lg leading-tight">
-              {isEdit ? 'Edit Staff Member' : 'Add New Staff'}
+            <h3 className="font-black text-gray-900 text-sm sm:text-lg leading-tight uppercase tracking-tight">
+              {isEdit ? 'Update Member' : 'New Staff'}
             </h3>
-            <p className="text-xs text-gray-400">
-              {isEdit ? `Editing ${member.name}` : 'Fill in all required fields'}
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+              {isEdit ? `Editing access` : 'Access control'}
             </p>
           </div>
         </div>
         <button onClick={onClose}
-          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100
-                     text-gray-400 transition text-lg leading-none">×</button>
+          className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gray-100 active:scale-95
+                     text-gray-400 transition-all text-2xl leading-none">×</button>
       </div>
 
       {/* Body */}
@@ -171,15 +171,16 @@ const StaffFormModal = ({ member, onClose, onSave, existingEmails }) => {
         </Field>
 
         <Field label="Role" error={errors.role}>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="flex flex-wrap gap-2">
             {ROLES.map(r => (
               <button key={r}
                 onClick={() => set('role', r)}
-                className={`py-2.5 rounded-xl text-sm font-bold capitalize transition border-2
+                className={`flex-1 min-w-[80px] py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border-2
                   ${form.role === r
-                    ? 'border-indigo-600 bg-indigo-50 text-indigo-700 shadow-sm'
-                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'}`}>
-                {r === 'cook' ? '👨‍🍳' : r === 'waiter' ? '🧑‍💼' : '👑'} {r}
+                    ? 'border-indigo-600 bg-indigo-50 text-indigo-700 shadow-lg shadow-indigo-100'
+                    : 'border-gray-50 bg-gray-50 text-gray-500 hover:border-gray-200'}`}>
+                <div className="text-lg mb-0.5">{r === 'cook' ? '👨‍🍳' : r === 'waiter' ? '🧑‍💼' : '👑'}</div>
+                {r}
               </button>
             ))}
           </div>
@@ -201,19 +202,19 @@ const StaffFormModal = ({ member, onClose, onSave, existingEmails }) => {
       </div>
 
       {/* Footer */}
-      <div className="px-6 pb-6 flex gap-3">
+      <div className="px-6 pb-6 pt-2 flex flex-col sm:flex-row gap-3">
         <button onClick={onClose}
-          className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-bold
-                     text-gray-600 hover:bg-gray-50 transition">
+          className="flex-1 py-3 border-2 border-gray-50 rounded-xl text-[10px] font-black uppercase tracking-widest
+                     text-gray-400 hover:bg-gray-50 transition-all active:scale-95">
           Cancel
         </button>
         <button onClick={handleSave} disabled={saving}
-          className="flex-1 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white
-                     rounded-xl text-sm font-bold hover:opacity-90 transition shadow-md
-                     flex items-center justify-center gap-2 disabled:opacity-60">
+          className="flex-[2] py-3 bg-indigo-600 text-white
+                     rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all
+                     flex items-center justify-center gap-2 disabled:opacity-60 active:scale-95">
           {saving
-            ? <><span className="animate-spin inline-block">⟳</span> Saving…</>
-            : isEdit ? '✓ Save Changes' : '+ Add Member'}
+            ? 'Processing...'
+            : isEdit ? 'Update Details' : 'Initialize Staff'}
         </button>
       </div>
     </Modal>
@@ -429,28 +430,28 @@ export const AccountSettings = ({
       {/* Subscription */}
       <div className="bg-white rounded-2xl shadow-md p-6">
         <h3 className="font-bold text-gray-900 text-lg mb-4">Subscription Plan</h3>
-        <div className={`rounded-2xl p-5 border-2
-          ${plan?.isPopular ? 'border-indigo-400 bg-indigo-50' : 'border-gray-200 bg-gray-50'}`}>
-          <div className="flex items-center justify-between">
+        <div className={`rounded-2xl p-5 border-2 relative overflow-hidden group transition-all
+          ${plan?.isPopular ? 'border-indigo-500 bg-indigo-50 shadow-xl shadow-indigo-100' : 'border-gray-100 bg-gray-50'}`}>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <div className="flex items-center gap-2">
-                <h4 className="font-extrabold text-xl text-gray-900">{plan?.name}</h4>
+              <div className="flex items-center gap-2 mb-1">
+                <h4 className="font-black text-xl text-gray-900 uppercase tracking-tight">{plan?.name}</h4>
                 {plan?.isPopular && (
-                  <span className="text-xs bg-indigo-600 text-white px-2 py-0.5 rounded-full font-bold">
-                    Most Popular
+                  <span className="text-[9px] bg-indigo-600 text-white px-3 py-1 rounded-full font-black uppercase tracking-widest shadow-lg">
+                    CURRENT
                   </span>
                 )}
               </div>
-              <p className="text-3xl font-extrabold text-indigo-600 mt-1">
-                ${plan?.price}
-                <span className="text-base text-gray-500 font-normal">/mo</span>
+              <p className="text-4xl font-black text-indigo-700">
+                ₹{plan?.price * 80}
+                <span className="text-xs text-indigo-400 font-bold ml-1 uppercase">/year</span>
               </p>
             </div>
-            <div className="text-right">
-              <div className="w-3 h-3 rounded-full bg-emerald-400 inline-block mr-1" />
-              <span className="text-sm font-semibold text-emerald-700 capitalize">
-                {restaurant.subscriptionStatus}
-              </span>
+            <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center">
+              <div className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-[10px] font-black uppercase tracking-widest">
+                Active
+              </div>
+              <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">Renews Jan 2026</p>
             </div>
           </div>
           <div className="mt-4 space-y-1">
@@ -460,9 +461,8 @@ export const AccountSettings = ({
               </p>
             ))}
           </div>
-          <button className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm
-                             font-bold hover:bg-indigo-700 transition">
-            Upgrade Plan
+          <button className="mt-6 w-full py-3 bg-white border-2 border-indigo-200 text-indigo-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all shadow-md active:scale-95">
+            Upgrade Capacity
           </button>
         </div>
       </div>

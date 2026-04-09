@@ -17,6 +17,7 @@ import {
   getMenuBySlug,
   addMenuItem,
   updateMenuItem,
+  bulkUploadMenuItems,
 } from '../controllers/menuController.js';
 import {
   getCategoriesByRestaurantId,
@@ -65,6 +66,7 @@ router.get('/restaurants/:_id/revenue/weekly', getWeeklyRevenue);
 router.get('/restaurants/:_id/menu', getMenuByRestaurantId);
 router.get('/restaurants/slug/:slug/menu', getMenuBySlug);
 router.post('/menu-items', addMenuItem);
+router.post('/menu-items/bulk', bulkUploadMenuItems);
 router.patch('/menu-items/:_id', updateMenuItem);
 
 // ── Categories ────────────────────────────────────────────────────────────────

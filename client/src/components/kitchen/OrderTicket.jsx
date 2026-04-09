@@ -5,13 +5,13 @@ const STATUS_CONFIG = {
     border: 'border-amber-300',
     badge: 'bg-amber-100 text-amber-700',
     label: '🕐 Pending',
-    timer: false,
+    timer: true,
   },
   cooking: {
     border: 'border-blue-300',
     badge: 'bg-blue-100 text-blue-700',
     label: '🍳 Cooking',
-    timer: false,
+    timer: true,
   },
   ready: {
     border: 'border-emerald-300',
@@ -40,13 +40,38 @@ export const OrderTicket = ({ order, onStartCooking, onMarkReady }) => {
   useEffect(() => { setVisible(true); }, []);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setElapsedTime(Math.floor((Date.now() - new Date(order.createdAt).getTime()) / 1000));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [order.createdAt]);
+    const calculateTime = () => {
+      const readyEvent = order.statusHistory?.find(h => h.status === 'ready');
+      const endTime = readyEvent ? new Date(readyEvent.timestamp).getTime() : Date.now();
+      const startTime = new Date(order.createdAt).getTime();
+      return Math.max(0, Math.floor((endTime - startTime) / 1000));
+    };
 
-  const formatTime = (s) => `${Math.floor(s / 60)}m ${s % 60}s`;
+    setElapsedTime(calculateTime());
+
+    if (['pending', 'cooking'].includes(order.status)) {
+      const interval = setInterval(() => {
+        setElapsedTime(calculateTime());
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [order.createdAt, order.status, order.statusHistory]);
+
+  const formatTime = (s) => {
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    if (h > 0) return `${h}h ${m}m ${sec}s`;
+    return `${m}m ${sec}s`;
+  };
+
+  const getServedTime = () => {
+    const servedEvent = order.statusHistory?.find(h => h.status === 'served');
+    if (servedEvent) {
+      return new Date(servedEvent.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    return '';
+  };
 
   const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending;
 
@@ -64,9 +89,15 @@ export const OrderTicket = ({ order, onStartCooking, onMarkReady }) => {
           </span>
         </div>
         {cfg.timer && (
-          <div className="text-right bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
-            <p className="text-xs text-amber-500 font-semibold">Wait time</p>
-            <p className="text-lg font-extrabold text-amber-600 font-mono">{formatTime(elapsedTime)}</p>
+          <div className={`text-right ${order.status === 'ready' ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'} border rounded-xl px-3 py-2`}>
+            <p className={`text-xs ${order.status === 'ready' ? 'text-emerald-500' : 'text-amber-500'} font-semibold`}>{order.status === 'ready' ? 'Prep time' : 'Wait time'}</p>
+            <p className={`text-lg font-extrabold ${order.status === 'ready' ? 'text-emerald-600' : 'text-amber-600'} font-mono`}>{formatTime(elapsedTime)}</p>
+          </div>
+        )}
+        {order.status === 'served' && (
+          <div className="text-right bg-blue-50 border border-blue-200 rounded-xl px-3 py-2">
+            <p className="text-xs text-blue-500 font-semibold">Served at</p>
+            <p className="text-lg font-extrabold text-blue-600 font-mono">{getServedTime()}</p>
           </div>
         )}
       </div>

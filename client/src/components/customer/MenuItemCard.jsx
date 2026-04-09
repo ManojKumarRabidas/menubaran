@@ -3,12 +3,15 @@
  */
 export const MenuItemCard = ({ item, onAddClick }) => {
   const isVeg = item.isVeg;
+  const isAvailable = item.isAvailable !== false; // handle null/undefined as true
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col">
+    <div className={`bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-200 flex flex-col ${
+      !isAvailable ? 'opacity-75 grayscale-[0.5]' : 'hover:shadow-md hover:-translate-y-0.5'
+    }`}>
       {/* Image / Gradient Area */}
       <div
-        className={`relative h-44 bg-gradient-to-br ${item.gradientFrom} ${item.gradientTo} flex items-center justify-center`}
+        className={`relative h-44 bg-gradient-to-br ${item.gradientFrom || 'from-amber-400'} ${item.gradientTo || 'to-orange-500'} flex items-center justify-center`}
       >
         <span className="text-5xl opacity-60">{item.emoji || '🍽️'}</span>
 
@@ -22,9 +25,18 @@ export const MenuItemCard = ({ item, onAddClick }) => {
         </div>
 
         {/* Popular Badge */}
-        {item.isPopular && (
+        {item.isPopular && isAvailable && (
           <div className="absolute top-3 right-3 bg-amber-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm">
             ⭐ Popular
+          </div>
+        )}
+
+        {/* Unavailable Badge */}
+        {!isAvailable && (
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+            <span className="bg-white/90 text-red-600 px-4 py-1.5 rounded-full text-sm font-black uppercase tracking-widest shadow-lg transform -rotate-12">
+              Sold Out
+            </span>
           </div>
         )}
       </div>
@@ -38,14 +50,25 @@ export const MenuItemCard = ({ item, onAddClick }) => {
           <div className="flex flex-col">
             <span className="text-lg font-extrabold text-gray-900">₹{item.price.toFixed(0)}</span>
             <span className="text-xs text-gray-400 flex items-center gap-1">
-              ⏱ {item.preparationTimeMinutes} min
+              ⏱ {item.preparationTimeMinutes || 10} min
             </span>
           </div>
           <button
-            onClick={() => onAddClick(item)}
-            className="flex items-center gap-1.5 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-bold px-4 py-2 rounded-xl text-sm transition-all duration-150 shadow-sm"
+            onClick={() => isAvailable && onAddClick(item)}
+            disabled={!isAvailable}
+            className={`flex items-center gap-1.5 font-bold px-4 py-2 rounded-xl text-sm transition-all duration-150 shadow-sm ${
+              isAvailable 
+                ? 'bg-amber-600 hover:bg-amber-700 active:scale-95 text-white' 
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+            }`}
           >
-            <span className="text-base leading-none">＋</span> Add
+            {isAvailable ? (
+              <>
+                <span className="text-base leading-none">＋</span> Add
+              </>
+            ) : (
+              'Unavailable'
+            )}
           </button>
         </div>
       </div>

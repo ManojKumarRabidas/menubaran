@@ -80,6 +80,18 @@ export const updateMenuItem = async (itemId, updates) => {
   }
 };
 
+export const bulkUploadMenuItems = async (restaurantId, items) => {
+  try {
+    const res = await api(`/api/menu-items/bulk`, {
+      method: 'POST',
+      body: JSON.stringify({ restaurantId, items }),
+    });
+    return { data: res.success ? res.docs : [], success: res.success, error: res.error };
+  } catch (error) {
+    return { data: [], success: false, error: error.message };
+  }
+};
+
 export const updateMenuItemPrice = async (itemId, newPrice) => {
   return updateMenuItem(itemId, { price: parseFloat(newPrice) });
 };

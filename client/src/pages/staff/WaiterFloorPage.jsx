@@ -3,11 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { ProtectedRoute } from '../../components/common/ProtectedRoute.jsx';
 import { TableCard } from '../../components/waiter/TableCard.jsx';
 import { NotificationPanel } from '../../components/waiter/NotificationPanel.jsx';
+import { WaiterAlert } from '../../components/waiter/WaiterAlert.jsx';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner.jsx';
 import { UserProfilePanel } from '../../components/common/UserProfilePanel.jsx';
 import { useAuth } from '../../hooks/useAuth.js';
 import { useSocket } from '../../hooks/useSocket.js';
-import { getTablesByRestaurant, getTodaysOrdersByRestaurant } from '../../services/api.js';
+import { getTablesByRestaurant, getTodaysOrdersByRestaurant, updateOrderStatus } from '../../services/api.js';
 
 export default function WaiterFloorPage() {
   const { user, logout } = useAuth();
@@ -23,6 +24,23 @@ export default function WaiterFloorPage() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [activeTab, setActiveTab] = useState('tables');
   const [showProfile, setShowProfile] = useState(false);
+  const [alertInfo, setAlertInfo] = useState(null);
+
+  const playBeep = () => {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = 880;
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.3);
+    } catch (e) { }
+  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -52,6 +70,7 @@ export default function WaiterFloorPage() {
   useEffect(() => {
     const handleNewOrder = (data) => {
       if (data.restaurantId === user?.restaurantId) {
+        setOrders(prev => [data.order, ...prev]);
         const notification = {
           type: 'order',
           message: `New order placed — Table ${data.order.tableNumber}`,
@@ -72,6 +91,9 @@ export default function WaiterFloorPage() {
   useEffect(() => {
     const handleStatusUpdate = (data) => {
       if (data.restaurantId === user?.restaurantId) {
+        setOrders(prev =>
+          prev.map(o => o._id === data.orderId ? { ...o, status: data.newStatus } : o)
+        );
         const notification = {
           type: data.newStatus === 'ready' ? 'ready' : 'order',
           message: data.newStatus === 'ready'
@@ -81,6 +103,10 @@ export default function WaiterFloorPage() {
           onDismiss: () => dismissNotification(0)
         };
         setNotifications(prev => [notification, ...prev]);
+        if (data.newStatus === 'ready') {
+          playBeep();
+          setAlertInfo({ tableNumber: data.tableNumber });
+        }
       }
     };
 
@@ -139,21 +165,29 @@ export default function WaiterFloorPage() {
     setShowOrderModal(true);
   };
 
-  const getOrderForTable = (tableId) => {
-    return orders.find(o => o.tableId === tableId);
+  const getOrdersForTable = (tableId) => {
+    return orders.filter(o => o.tableId === tableId && !['cancelled', 'paid'].includes(o.status));
   };
 
   const changeStatus = async (currentOrderId, status) => {
-    // console.log(currentOrderId, status)
-    await updateOrderStatus(currentOrderId, status);
-    onOrdersChange(prev =>
-      prev.map(o =>
-        o._id === currentOrderId
-          ? { ...o, status, paymentStatus: status === 'paid' ? 'paid' : o.paymentStatus }
-          : o
-      )
-    );
-    onToast?.(`Order ${currentOrderId.substring(0, 8)} → ${status}`, 'success');
+    try {
+      await updateOrderStatus(currentOrderId, status);
+      setOrders(prev =>
+        prev.map(o =>
+          o._id === currentOrderId
+            ? { ...o, status, paymentStatus: status === 'paid' ? 'paid' : o.paymentStatus }
+            : o
+        )
+      );
+      setNotifications(prev => [{
+        type: 'order',
+        message: `Order marked as ${status} (Table ${selectedTable?.number})`,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        onDismiss: () => dismissNotification(0)
+      }, ...prev]);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   if (loading) {
@@ -245,7 +279,7 @@ export default function WaiterFloorPage() {
                   <TableCard
                     key={table._id}
                     table={table}
-                    order={getOrderForTable(table._id)}
+                    orders={getOrdersForTable(table._id)}
                     onTableClick={handleTableClick}
                   />
                 ))}
@@ -276,47 +310,61 @@ export default function WaiterFloorPage() {
                 </button>
               </div>
 
-              <div className="p-6">
-                {getOrderForTable(selectedTable._id) ? (
-                  <div>
-                    <div className="mb-6 p-3 bg-blue-50 rounded-lg">
-                      <p className="text-sm font-semibold text-blue-900">
-                        Status: <span className="capitalize">{getOrderForTable(selectedTable._id)?.status}</span>
-                      </p>
-                    </div>
-
-                    <h3 className="font-bold text-gray-900 mb-3">Items:</h3>
-                    <div className="space-y-2 mb-6">
-                      {getOrderForTable(selectedTable._id)?.items.map((item, idx) => (
-                        <div key={idx} className="p-2 bg-gray-50 rounded">
-                          <p className="font-semibold text-gray-900">×{item.qty} {item.name}</p>
-                          {item.note && <p className="text-xs text-gray-600 italic">{item.note}</p>}
+              <div className="p-6 max-h-[70vh] overflow-y-auto">
+                {getOrdersForTable(selectedTable._id).length > 0 ? (
+                  <div className="space-y-6 flex flex-col">
+                    {getOrdersForTable(selectedTable._id).map((order, orderIdx) => (
+                      <div key={order._id} className="border border-gray-200 rounded-xl p-4 shadow-sm relative bg-white">
+                        <div className="absolute -top-3 -left-3 w-8 h-8 rounded-full bg-blue-100 border-2 border-white flex items-center justify-center text-blue-800 font-extrabold text-sm shadow-sm ring-2 ring-blue-50">
+                          #{orderIdx + 1}
                         </div>
-                      ))}
-                    </div>
+                        <div className="mb-4 flex flex-wrap gap-2 items-center justify-between">
+                          <p className="text-sm font-semibold text-gray-800">
+                            Status: <span className="capitalize px-2 py-0.5 rounded-md text-xs text-white" style={{
+                              backgroundColor: order.status === 'ready' ? '#10b981' : order.status === 'pending' ? '#f59e0b' : '#3b82f6'
+                            }}>{order.status}</span>
+                          </p>
+                          <p className="text-xs text-gray-500 font-mono">
+                            {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                        
+                        <div className="space-y-2 mb-4">
+                          {order.items.map((item, idx) => (
+                            <div key={idx} className="flex gap-2">
+                              <span className="font-bold text-gray-700 bg-gray-100 rounded px-1.5 py-0.5 text-xs h-fit font-mono shrink-0">×{item.qty}</span>
+                              <div>
+                                <p className="font-semibold text-gray-900 text-sm leading-tight">{item.name}</p>
+                                {item.note && <p className="text-xs text-amber-600 italic mt-0.5 bg-amber-50 px-1.5 py-0.5 rounded">Note: {item.note}</p>}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
 
-                    <div className="border-t border-gray-200 pt-4">
-                      <p className="text-lg font-bold text-orange-600">
-                        Total: ₹{getOrderForTable(selectedTable._id)?.totalAmount.toFixed(2)}
-                      </p>
-                    </div>
+                        <div className="border-t border-gray-100 pt-3 flex items-center justify-between">
+                          <p className="text-sm font-bold text-gray-900">Total: ₹{order.totalAmount.toFixed(2)}</p>
+                          {order.status === 'ready' && (
+                            <button
+                              onClick={() => changeStatus(order._id, 'served')}
+                              className="bg-blue-600 text-white font-bold py-1.5 px-3 rounded-lg hover:bg-blue-700 transition text-sm shadow-sm"
+                            >
+                              Serve Now 🍽️
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ) : (
-                  <p className="text-gray-500 text-center py-8">No active order for this table</p>
+                  <p className="text-gray-500 text-center py-8">No active orders for this table</p>
                 )}
-                <div>
+                <div className="mt-6 sticky bottom-0 bg-white pt-2 border-t border-gray-50">
                   <button
                     onClick={() => setShowOrderModal(false)}
-                    className="mt-6 w-full bg-gray-200 text-gray-900 font-bold py-2 rounded-lg hover:bg-gray-300 transition"
+                    className="w-full bg-gray-100 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-200 transition"
                   >
                     Close
                   </button>
-                  {/* <button
-                    onClick={() => changeStatus(getOrderForTable(selectedTable.currentOrderId), 'served')}
-                    className="mt-6 w-full bg-gray-200 text-gray-900 font-bold py-2 rounded-lg hover:bg-gray-300 transition"
-                  >
-                    Mark as Served
-                  </button> */}
                 </div>
               </div>
             </div>
@@ -324,6 +372,11 @@ export default function WaiterFloorPage() {
         )}
         {/* User Profile Drawer */}
         <UserProfilePanel isOpen={showProfile} onClose={() => setShowProfile(false)} />
+        <WaiterAlert 
+          tableNumber={alertInfo?.tableNumber} 
+          isVisible={!!alertInfo} 
+          onDismiss={() => setAlertInfo(null)} 
+        />
       </div>
     </ProtectedRoute>
   );

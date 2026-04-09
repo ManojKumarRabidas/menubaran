@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { updateMenuItem, addMenuItem } from '../../services/api.js';
+import { useState, useRef } from 'react';
+import * as XLSX from 'xlsx';
+import { updateMenuItem, addMenuItem, bulkUploadMenuItems } from '../../services/api.js';
 
 const EMOJIS = ['🍕', '🍔', '🌮', '🍜', '🍣', '🥗', '🍗', '🥩', '🍝', '🥘', '🫕', '🍛', '🍞', '🥐', '🧆', '🍱', '🥟', '🍢', '🫔', '🧇', '🍦', '🧁', '🍩', '🥤', '☕', '🍵', '🧃', '🫖', '🍺', '🥂'];
 
@@ -25,6 +26,8 @@ export const MenuEditor = ({ items = [], categories = [], restaurantId, onToast,
   const [newItem, setNewItem] = useState(BLANK_NEW);
   const [addEmojiOpen, setAddEmojiOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
   const filtered = items.filter(item => {
     console.log(item)
@@ -123,6 +126,90 @@ export const MenuEditor = ({ items = [], categories = [], restaurantId, onToast,
     setBulkMode(false); setBulkPct('');
   };
 
+  /* ── Bulk Excel Upload ── */
+  const downloadSampleExcel = () => {
+    const sampleData = [
+      {
+        Name: 'Margherita Pizza',
+        Price: 299,
+        Category: 'Pizza',
+        Description: 'Classic tomato and mozzarella',
+        'Veg/Non-Veg': 'Veg',
+        'Icon (Emoji)': '🍕'
+      },
+      {
+        Name: 'Chicken Burger',
+        Price: 199,
+        Category: 'Burgers',
+        Description: 'Spicy chicken patty with lettuce',
+        'Veg/Non-Veg': 'Non-Veg',
+        'Icon (Emoji)': '🍔'
+      }
+    ];
+
+    const ws = XLSX.utils.json_to_sheet(sampleData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Menu Items');
+    XLSX.writeFile(wb, 'menu_sample.xlsx');
+    onToast?.('Sample file downloaded', 'info');
+  };
+
+  const handleExcelUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      try {
+        setIsUploading(true);
+        const bstr = evt.target.result;
+        const wb = XLSX.read(bstr, { type: 'binary' });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        const data = XLSX.utils.sheet_to_json(ws);
+
+        if (data.length === 0) {
+          onToast?.('Excel file is empty', 'error');
+          return;
+        }
+
+        // Map column names to backend expectations
+        const items = data.map(row => ({
+          name: row.Name || row.name || '',
+          price: row.Price || row.price || 0,
+          category: row.Category || row.category || '',
+          description: row.Description || row.description || '',
+          isVeg: (row['Veg/Non-Veg'] || row.veg || '').toLowerCase() === 'veg',
+          emoji: row['Icon (Emoji)'] || row.emoji || '🍽️'
+        })).filter(i => i.name && i.category);
+
+        if (items.length === 0) {
+          onToast?.('No valid items found (Name and Category are required)', 'error');
+          return;
+        }
+
+        const res = await bulkUploadMenuItems(restaurantId, items);
+        if (res.success) {
+          onToast?.(`Succesfully uploaded ${res.count} items!`, 'success');
+          onItemsChange(prev => [...prev, ...res.docs]);
+          // If we created new categories, we should ideally refresh them too, 
+          // but for now we expect the user to refresh or the parent to handle it.
+          // Better: tell parent something changed that might involve categories.
+          setTimeout(() => window.location.reload(), 1500); // Simple hack to refresh categories
+        } else {
+          onToast?.(res.error || 'Failed to upload items', 'error');
+        }
+      } catch (err) {
+        onToast?.('Error parsing Excel file', 'error');
+        console.error(err);
+      } finally {
+        setIsUploading(false);
+        e.target.value = ''; // Reset input
+      }
+    };
+    reader.readAsBinaryString(file);
+  };
+
   /* ── Shared emoji picker render ── */
   const EmojiGrid = ({ onSelect }) => (
     <div className="flex flex-wrap gap-1 mt-2 bg-gray-50 rounded-xl p-2 max-h-28 overflow-y-auto">
@@ -187,6 +274,31 @@ export const MenuEditor = ({ items = [], categories = [], restaurantId, onToast,
         >
           <span className="text-lg leading-none">＋</span> Add Item
         </button>
+
+        {/* Excel Bulk Upload */}
+        <div className="flex gap-1">
+          <button
+            onClick={downloadSampleExcel}
+            className="px-3 py-2 bg-gray-100 text-gray-700 rounded-xl text-xs font-semibold hover:bg-gray-200 transition border border-gray-200 flex items-center gap-1.5"
+            title="Download Sample Excel"
+          >
+            <span>📥</span> Sample
+          </button>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+            className={`px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 transition flex items-center gap-2 shadow ${isUploading ? 'opacity-60 cursor-not-allowed' : ''}`}
+          >
+            {isUploading ? '⌛ Uploading...' : <><span>📊</span> Excel Upload</>}
+          </button>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleExcelUpload}
+            accept=".xlsx, .xls"
+            className="hidden"
+          />
+        </div>
 
         {/* Bulk edit */}
         {!bulkMode ? (

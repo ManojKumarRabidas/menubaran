@@ -51,6 +51,7 @@ export default function OwnerDashboardPage() {
   const [weeklyRevenue, setWeeklyRevenue] = useState([]);
   const [staffList, setStaffList] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isTabFetching, setIsTabFetching] = useState(false);
 
   const [toast, setToast] = useState({ msg: '', type: '' });
   const [restaurant, setRestaurant] = useState({});
@@ -61,47 +62,73 @@ export default function OwnerDashboardPage() {
   };
 
 
-  const load = async () => {
+  const loadTabData = async () => {
+    if (!user?.restaurantId) return;
+
     try {
+      setIsTabFetching(true);
+      const promises = [];
 
-      const [statsRes, menuRes, catRes, tablesRes, ordersRes, weekRes, staffRes] = await Promise.all([
-        getOwnerStats(user?.restaurantId).catch(e => { console.error('[FAIL] getOwnerStats:', e); return null; }),
-        getMenuByRestaurant(user?.restaurantId).catch(e => { console.error('[FAIL] getMenuByRestaurant:', e); return null; }),
-        getCategoriesByRestaurant(user?.restaurantId).catch(e => { console.error('[FAIL] getCategoriesByRestaurant:', e); return null; }),
-        getTablesByRestaurant(user?.restaurantId).catch(e => { console.error('[FAIL] getTablesByRestaurant:', e); return null; }),
-        getOrdersByRestaurant(user?.restaurantId).catch(e => { console.error('[FAIL] getOrdersByRestaurant:', e); return null; }),
-        getWeeklyRevenue(user?.restaurantId).catch(e => { console.error('[FAIL] getWeeklyRevenue:', e); return null; }),
-        getStaffByRestaurant(user?.restaurantId).catch(e => { console.error('[FAIL] getStaffByRestaurant:', e); return null; }),
-      ]);
+      // We always fetch orders for the pending payment badge and live tracking across all tabs
+      promises.push(getOrdersByRestaurant(user.restaurantId).then(res => ({ key: 'orders', data: res?.data })).catch(e => { console.error('[FAIL] getOrders:', e); return { key: 'orders', data: null }; }));
 
-      // Only set state if response is not null
-      if (statsRes) setStats(statsRes.data);
-      if (menuRes) setMenuItems(menuRes.data);
-      if (catRes) setCategories(catRes.data);
-      if (tablesRes) setTables(tablesRes.data);
-      if (ordersRes) setOrders(ordersRes.data);
-      if (weekRes) setWeeklyRevenue(weekRes.data);
-      if (staffRes) setStaffList(staffRes.data);
+      if (activeTab === 'overview') {
+        promises.push(getOwnerStats(user.restaurantId).then(res => ({ key: 'stats', data: res?.data })).catch(e => ({ key: 'stats', data: null })));
+        promises.push(getMenuByRestaurant(user.restaurantId).then(res => ({ key: 'menuItems', data: res?.data })).catch(e => ({ key: 'menuItems', data: null })));
+        promises.push(getCategoriesByRestaurant(user.restaurantId).then(res => ({ key: 'categories', data: res?.data })).catch(e => ({ key: 'categories', data: null })));
+        promises.push(getWeeklyRevenue(user.restaurantId).then(res => ({ key: 'weeklyRevenue', data: res?.data })).catch(e => ({ key: 'weeklyRevenue', data: null })));
+      } else if (activeTab === 'menu') {
+        promises.push(getMenuByRestaurant(user.restaurantId).then(res => ({ key: 'menuItems', data: res?.data })).catch(e => ({ key: 'menuItems', data: null })));
+        promises.push(getCategoriesByRestaurant(user.restaurantId).then(res => ({ key: 'categories', data: res?.data })).catch(e => ({ key: 'categories', data: null })));
+      } else if (activeTab === 'tables') {
+        promises.push(getTablesByRestaurant(user.restaurantId).then(res => ({ key: 'tables', data: res?.data })).catch(e => ({ key: 'tables', data: null })));
+      } else if (activeTab === 'account' || activeTab === 'settings') {
+        promises.push(getStaffByRestaurant(user.restaurantId).then(res => ({ key: 'staffList', data: res?.data })).catch(e => ({ key: 'staffList', data: null })));
+      }
+
+      const results = await Promise.all(promises);
+
+      results.forEach(({ key, data }) => {
+        if (data !== null) {
+          if (key === 'orders') setOrders(data);
+          else if (key === 'stats') setStats(data);
+          else if (key === 'menuItems') setMenuItems(data);
+          else if (key === 'categories') setCategories(data);
+          else if (key === 'weeklyRevenue') setWeeklyRevenue(data);
+          else if (key === 'tables') setTables(data);
+          else if (key === 'staffList') setStaffList(data);
+        }
+      });
 
     } catch (e) {
       showToast('Failed to load dashboard data', 'error');
     } finally {
-      setLoading(false); // Now ALWAYS fires even if a call fails
+      setLoading(false);
+      setIsTabFetching(false);
     }
   };
 
   const fetchRestaurant = async () => {
-    let getRestaurant = await getRestaurantById(user?.restaurantId) || null;
-    if (getRestaurant && getRestaurant.data) {
-      setRestaurant(getRestaurant);
-      if (user?.restaurantId && getRestaurant?.data?.slug) {
-        load();
+    if (!user?.restaurantId) return;
+    try {
+      let getRestaurant = await getRestaurantById(user.restaurantId);
+      if (getRestaurant && getRestaurant.data) {
+        setRestaurant(getRestaurant);
       }
+    } catch (error) {
+      console.error(error);
     }
   };
+
   useEffect(() => {
     fetchRestaurant();
-  }, [user?.restaurantId, user]);
+  }, [user?.restaurantId]);
+
+  useEffect(() => {
+    if (user?.restaurantId) {
+      loadTabData();
+    }
+  }, [activeTab, user?.restaurantId]);
 
   // Donut chart: revenue segments by category
   const donutSegments = (() => {
@@ -209,6 +236,11 @@ export default function OwnerDashboardPage() {
               <p className="text-xs text-gray-500">{restaurant?.name} • Owner Dashboard</p>
             </div>
             <div className="flex items-center gap-3">
+              {isTabFetching && (
+                <span className="hidden sm:flex items-center gap-1.5 text-sm text-indigo-500 font-semibold mr-2 animate-pulse">
+                  ↻ Updating...
+                </span>
+              )}
               <span className="hidden sm:flex items-center gap-1.5 text-sm text-gray-500">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
                 Live

@@ -1,7 +1,7 @@
 /**
  * Table card showing table status and order info
  */
-export const TableCard = ({ table, order, onTableClick }) => {
+export const TableCard = ({ table, orders, onTableClick }) => {
   const statusColors = {
     free: 'border-green-500 bg-green-50',
     occupied: 'border-amber-500 bg-amber-50',
@@ -18,6 +18,12 @@ export const TableCard = ({ table, order, onTableClick }) => {
 
   const borderClass = statusColors[table.status] || statusColors.free;
 
+  // Aggregate items count and total amount
+  const activeOrdersCount = orders ? orders.length : 0;
+  const totalItems = orders ? orders.reduce((sum, o) => sum + o.items.length, 0) : 0;
+  const totalAmount = orders ? orders.reduce((sum, o) => sum + o.totalAmount, 0) : 0;
+  const uniqueStatuses = orders ? Array.from(new Set(orders.map(o => o.status))).join(', ') : '';
+
   return (
     <button
       onClick={() => onTableClick(table)}
@@ -28,16 +34,16 @@ export const TableCard = ({ table, order, onTableClick }) => {
         <span className="text-2xl">{statusEmoji[table.status]}</span>
       </div>
 
-      {order ? (
+      {activeOrdersCount > 0 ? (
         <div className="text-sm text-gray-700 space-y-1">
-          <p className="font-semibold">{order.items.length} item(s)</p>
+          <p className="font-semibold">{activeOrdersCount} order(s) · {totalItems} item(s)</p>
           <p className="text-gray-600">
-            Total: <span className="font-bold">₹{order.totalAmount.toFixed(2)}</span>
+            Total: <span className="font-bold">₹{totalAmount.toFixed(2)}</span>
           </p>
-          <p className="text-xs text-gray-500 capitalize">Status: {order.status}</p>
+          <p className="text-xs text-gray-500 capitalize">Status: {uniqueStatuses}</p>
         </div>
       ) : (
-        <p className="text-sm text-gray-500">No active order</p>
+        <p className="text-sm text-gray-500">No active orders</p>
       )}
     </button>
   );

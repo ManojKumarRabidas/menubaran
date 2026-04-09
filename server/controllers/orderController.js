@@ -86,6 +86,12 @@ export const placeOrder = async (req, res) => {
             currentOrderId: doc._id,
         });
 
+        // Broadcast to all connected clients
+        io.emit('order:new', {
+            order: doc,
+            restaurantId,
+        });
+
         return res.status(201).json({ success: true, doc });
     } catch (e) {
         return res.status(500).json({ success: false, error: e.message });

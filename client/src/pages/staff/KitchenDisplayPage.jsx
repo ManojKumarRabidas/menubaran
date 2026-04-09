@@ -72,7 +72,11 @@ export default function KitchenDisplayPage() {
     const handleStatusUpdate = (data) => {
       if (data.restaurantId !== user?.restaurantId) return;
       setOrders(prev =>
-        prev.map(o => o._id === data.orderId ? { ...o, status: data.newStatus } : o)
+        prev.map(o => o._id === data.orderId ? { 
+          ...o, 
+          status: data.newStatus,
+          statusHistory: [...(o.statusHistory || []), { status: data.newStatus, timestamp: new Date().toISOString() }]
+        } : o)
       );
     };
     socket?.on('order:statusUpdate', handleStatusUpdate);
@@ -82,7 +86,11 @@ export default function KitchenDisplayPage() {
   const handleStartCooking = async (orderId) => {
     try {
       await updateOrderStatus(orderId, 'cooking');
-      setOrders(prev => prev.map(o => o._id === orderId ? { ...o, status: 'cooking' } : o));
+      setOrders(prev => prev.map(o => o._id === orderId ? { 
+        ...o, 
+        status: 'cooking',
+        statusHistory: [...(o.statusHistory || []), { status: 'cooking', timestamp: new Date().toISOString() }]
+      } : o));
       socket?.emit('order:statusUpdate', { orderId, newStatus: 'cooking', restaurantId: user?.restaurantId });
     } catch (err) {
       console.error('Failed to update order');
@@ -92,7 +100,11 @@ export default function KitchenDisplayPage() {
   const handleMarkReady = async (orderId) => {
     try {
       await updateOrderStatus(orderId, 'ready');
-      setOrders(prev => prev.map(o => o._id === orderId ? { ...o, status: 'ready' } : o));
+      setOrders(prev => prev.map(o => o._id === orderId ? { 
+        ...o, 
+        status: 'ready',
+        statusHistory: [...(o.statusHistory || []), { status: 'ready', timestamp: new Date().toISOString() }]
+      } : o));
       socket?.emit('order:statusUpdate', { orderId, newStatus: 'ready', restaurantId: user?.restaurantId });
     } catch (err) {
       console.error('Failed to update order');

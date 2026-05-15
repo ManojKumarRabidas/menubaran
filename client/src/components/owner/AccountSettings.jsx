@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { restaurants, subscriptionPlans } from '../../data/data.js';
-import { createStaff, updateStaff, deleteStaff, toggleStaffStatus } from '../../services/api.js';
+import { createStaff, updateStaff, deleteStaff, toggleStaffStatus, updateRestaurant } from '../../services/api.js';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const LOGO_COLORS = [
@@ -75,6 +75,14 @@ const validate = (form, isEdit) => {
   return errs;
 };
 
+const Field = ({ label, _id, error, children }) => (
+  <div>
+    <label className="text-xs font-bold text-gray-500 uppercase tracking-wide block mb-1">{label}</label>
+    {children}
+    {error && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><span>⚠</span>{error}</p>}
+  </div>
+);
+
 // ─── Add / Edit Modal ─────────────────────────────────────────────────────────
 const StaffFormModal = ({ member, onClose, onSave, existingEmails }) => {
   const isEdit = Boolean(member);
@@ -107,13 +115,6 @@ const StaffFormModal = ({ member, onClose, onSave, existingEmails }) => {
     onClose();
   };
 
-  const Field = ({ label, _id, error, children }) => (
-    <div>
-      <label className="text-xs font-bold text-gray-500 uppercase tracking-wide block mb-1">{label}</label>
-      {children}
-      {error && <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><span>⚠</span>{error}</p>}
-    </div>
-  );
 
   const inputCls = (err) =>
     `w-full px-3 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 transition
@@ -337,7 +338,7 @@ export const AccountSettings = ({
   staffList = [],
   onStaffChange,
 }) => {
-  const restaurant = restaurantProp.data || restaurants.find(r => r._id === restaurantId) || {};
+  const restaurant = restaurantProp || restaurants.find(r => r._id === restaurantId) || {};
   const plan = subscriptionPlans.find(p =>
     p.name.toLowerCase() === restaurant.subscriptionPlan
   ) || subscriptionPlans[1];
@@ -413,14 +414,18 @@ export const AccountSettings = ({
   // ─────────────────────────────────────────────────────────────────────────
   const saveAccount = async () => {
     setSaving(true);
-    await new Promise(r => setTimeout(r, 600));
-    Object.assign(restaurant, {
+    const res = await updateRestaurant(restaurantId, {
       name: form.name,
       tagline: form.tagline,
       address: form.address,
       logoPlaceholderColor: form.logoColor,
     });
-    onToast?.('Restaurant profile updated!', 'success');
+    if (res.data) {
+      Object.assign(restaurant, res.data);
+      onToast?.('Restaurant profile updated!', 'success');
+    } else {
+      onToast?.(res.error || 'Failed to update profile', 'error');
+    }
     setSaving(false);
   };
 

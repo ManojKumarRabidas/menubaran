@@ -14,7 +14,8 @@ const staffLogin = async (req, res) => {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
         if (!authUser.isActive) {
-            return res.status(400).json({ msg: 'Your account is deactivated. Please contact with admin for activation.' });
+            console.log("here")
+            return res.status(400).json({ error: 'Your account is deactivated. Please contact with admin for activation.' });
         }
         const isMatch = await bcrypt.compare(password, authUser.password);
         if (!isMatch) {
@@ -40,8 +41,8 @@ export const getStaffByRestaurant = async (req, res) => {
 
 export const createStaff = async (req, res) => {
     try {
-        const { restaurantId } = req.params;
-        const { name, email, password, role } = req.body;
+        const { _id: restaurantId } = req.params;
+        const { name, email, password, role, avatarColor } = req.body;
 
         const existing = await Staff.findOne({ email });
         if (existing) {
@@ -55,13 +56,14 @@ export const createStaff = async (req, res) => {
             email,
             password: hashedPassword,
             role,
+            avatarColor: avatarColor || 'bg-indigo-500',
             isActive: true
         });
 
         await newStaff.save();
         const staffData = newStaff.toObject();
         delete staffData.password;
-        
+
         res.json({ success: true, data: staffData });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });

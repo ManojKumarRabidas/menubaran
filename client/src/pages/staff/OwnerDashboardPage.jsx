@@ -136,7 +136,8 @@ export default function OwnerDashboardPage() {
     try {
       let getRestaurant = await getRestaurantById(user.restaurantId);
       if (getRestaurant && getRestaurant.data) {
-        setRestaurant(getRestaurant);
+        console.log("ganja ganja", getRestaurant.data)
+        setRestaurant(getRestaurant.data);
       }
     } catch (error) {
       console.error(error);
@@ -208,7 +209,7 @@ export default function OwnerDashboardPage() {
   })();
 
   // Pending payment count badge
-  const pendingPayCount = orders.filter(o => o.paymentStatus !== 'paid' && o.status !== 'paid' && (o.status === 'served' || o.status === 'bill-requested')).length;
+  const pendingPayCount = orders.filter(o => o.paymentStatus !== 'paid' && (o.status === 'served' || o.status === 'bill-requested')).length;
 
   const toastStyles = {
     success: 'bg-emerald-500',
@@ -252,7 +253,7 @@ export default function OwnerDashboardPage() {
               {(sidebarOpen || mobileMenuOpen) && (
                 <div className="overflow-hidden">
                   <p className="font-extrabold text-sm leading-tight truncate">{restaurant?.name}</p>
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold truncate">Dashboard</p>
+                  <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold truncate">{user?.name}</p>
                 </div>
               )}
             </div>
@@ -265,7 +266,7 @@ export default function OwnerDashboardPage() {
               const isActive = activeTab === item._id;
               const badge = item._id === 'payments' && pendingPayCount > 0 ? pendingPayCount : null;
               const showText = sidebarOpen || mobileMenuOpen;
-              
+
               return (
                 <button
                   key={item._id}
@@ -306,11 +307,11 @@ export default function OwnerDashboardPage() {
         {/* ─── Main Content ─── */}
         <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 
           ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}`}>
-          
+
           {/* Top Header */}
           <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-100 px-4 sm:px-6 py-4 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <button 
+              <button
                 onClick={() => setMobileMenuOpen(true)}
                 className="lg:hidden p-2 -ml-2 text-gray-500 hover:bg-gray-100 rounded-lg transition"
               >
@@ -402,7 +403,7 @@ export default function OwnerDashboardPage() {
                       <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse inline-block"></span>
                     </div>
                     <div className="space-y-2">
-                      {orders.filter(o => !['paid'].includes(o.status)).slice(0, 6).map(order => {
+                      {orders.filter(o => o.status !== 'cancelled' && !(o.status === 'served' && o.paymentStatus === 'paid')).slice(0, 6).map(order => {
                         const statusColor = {
                           pending: 'bg-yellow-100 text-yellow-800',
                           cooking: 'bg-blue-100 text-blue-700',
@@ -422,7 +423,7 @@ export default function OwnerDashboardPage() {
                           </div>
                         );
                       })}
-                      {orders.filter(o => !['paid'].includes(o.status)).length === 0 && (
+                      {orders.filter(o => o.status !== 'cancelled' && !(o.status === 'served' && o.paymentStatus === 'paid')).length === 0 && (
                         <p className="text-gray-400 text-center py-6 text-sm">No active orders</p>
                       )}
                     </div>
@@ -443,6 +444,7 @@ export default function OwnerDashboardPage() {
                 restaurantId={user?.restaurantId}
                 onToast={showToast}
                 onItemsChange={setMenuItems}
+                onCategoriesChange={setCategories}
               />
             )}
 

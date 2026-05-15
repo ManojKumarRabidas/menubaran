@@ -218,7 +218,7 @@ export default function MenuPage() {
             className="flex-1 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 py-2 sm:py-3 bg-indigo-50 border border-indigo-100 text-indigo-700 rounded-xl font-bold text-[10px] sm:text-xs hover:bg-indigo-100 active:scale-95 transition-all duration-150"
           >
             <span className="text-base sm:text-sm">📋</span>
-            <span className="leading-none truncate w-full px-1 text-center">Orders</span>
+            <span className="leading-none truncate">Orders</span>
           </button>
         </div>
       </div>

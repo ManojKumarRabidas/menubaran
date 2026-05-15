@@ -12,7 +12,6 @@ const STATUS_STYLE = {
   ready: 'bg-green-100  text-green-800  border-green-200',
   served: 'bg-blue-100   text-blue-800   border-blue-200',
   cancelled: 'bg-red-100    text-red-800    border-red-200',
-  paid: 'bg-gray-100   text-gray-600   border-gray-200',
 };
 const STATUS_LABEL = {
   pending: '⏳ Pending',
@@ -20,7 +19,6 @@ const STATUS_LABEL = {
   ready: '✅ Ready',
   served: '🍽️ Served',
   cancelled: '❌ Cancelled',
-  paid: '💳 Paid',
 };
 
 export default function OrderTrackingPage() {

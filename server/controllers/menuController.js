@@ -68,6 +68,7 @@ export const bulkUploadMenuItems = async (req, res) => {
         }
 
         // 3. Create new categories if they don't exist
+        const newCategories = [];
         for (const catName of newCatsToCreate) {
             const newCat = await MenuCategory.create({
                 restaurantId,
@@ -75,6 +76,7 @@ export const bulkUploadMenuItems = async (req, res) => {
                 icon: '📁' // Default icon for auto-created categories
             });
             catMap.set(catName.toLowerCase(), newCat._id);
+            newCategories.push(newCat);
         }
 
         // 4. Prepare items for bulk insert
@@ -101,7 +103,7 @@ export const bulkUploadMenuItems = async (req, res) => {
         }
 
         const docs = await MenuItem.insertMany(finalItems);
-        return res.status(201).json({ success: true, count: docs.length, docs });
+        return res.status(201).json({ success: true, count: docs.length, docs, newCategories });
     } catch (e) {
         console.error('Bulk upload error:', e);
         return res.status(500).json({ success: false, error: e.message });

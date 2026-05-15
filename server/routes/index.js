@@ -1,6 +1,8 @@
 import express from 'express';
 import { adminLogin } from '../controllers/adminController.js';
 import { staffLogin, getStaffByRestaurant, createStaff, toggleStaffStatus, updateStaff, deleteStaff } from '../controllers/staffController.js';
+import { getAllFeedback } from '../controllers/feedbackController.js';
+import { getAllComplaints, resolveComplaint, markComplaintInProgress } from '../controllers/complaintController.js';
 import {
   getRestaurantById,
   getRestaurantBySlug,
@@ -9,7 +11,11 @@ import {
   registerRestaurant,
   getPendingRestaurants,
   approveRestaurant,
-  rejectRestaurant
+  rejectRestaurant,
+  getAllRestaurants,
+  toggleLoginPermission,
+  getAdminStats,
+  updateRestaurant
 } from '../controllers/restaurantController.js';
 import upload from '../middleware/uploadMiddleware.js';
 import {
@@ -22,6 +28,7 @@ import {
 import {
   getCategoriesByRestaurantId,
   getCategoriesBySlug,
+  createCategory,
 } from '../controllers/categoryController.js';
 import {
   getTablesByRestaurant,
@@ -51,16 +58,28 @@ router.post('/admin/login', adminLogin);
 router.post('/staff/login', staffLogin);
 
 // ── Restaurants ───────────────────────────────────────────────────────────────
+router.patch('/restaurants/:_id', updateRestaurant);
 router.get('/restaurants/:_id/staff', getStaffByRestaurant);
 router.post('/restaurants/:_id/staff', createStaff);
 router.patch('/staff/:_id/toggle', toggleStaffStatus);
 router.patch('/staff/:_id', updateStaff);
 router.delete('/staff/:_id', deleteStaff);
 
-router.post('/restaurants/register', upload.single('registrationDocument'), registerRestaurant);
+router.post('/restaurants/register', upload.fields([
+  { name: 'registrationDocument', maxCount: 1 },
+  { name: 'fssaiCertificate', maxCount: 1 },
+  { name: 'panCard', maxCount: 1 },
+  { name: 'bankPassbook', maxCount: 1 },
+  { name: 'shopPhoto', maxCount: 1 },
+  { name: 'restaurantLogo', maxCount: 1 },
+  // { name: 'menuImages', maxCount: 10 }
+]), registerRestaurant);
+router.get('/admin/stats', getAdminStats);
+router.get('/admin/restaurants', getAllRestaurants);
 router.get('/admin/restaurants/pending', getPendingRestaurants);
 router.patch('/admin/restaurants/:_id/approve', approveRestaurant);
 router.patch('/admin/restaurants/:_id/reject', rejectRestaurant);
+router.patch('/admin/restaurants/:_id/toggle-login', toggleLoginPermission);
 
 router.get('/restaurants/:_id', getRestaurantById);
 router.get('/restaurants/slug/:slug', getRestaurantBySlug);
@@ -77,6 +96,7 @@ router.patch('/menu-items/:_id', updateMenuItem);
 // ── Categories ────────────────────────────────────────────────────────────────
 router.get('/restaurants/:_id/categories', getCategoriesByRestaurantId);
 router.get('/restaurants/slug/:slug/categories', getCategoriesBySlug);
+router.post('/categories', createCategory);
 
 // ── Tables ────────────────────────────────────────────────────────────────────
 router.get('/restaurants/:_id/tables', getTablesByRestaurant);
@@ -97,5 +117,11 @@ router.post('/orders/:_id/payment', processPayment);
 router.get('/restaurants/:restaurantId/requests', getPendingRequestsByRestaurant);
 router.patch('/requests/:_id/clear', clearRequest);
 router.post('/tables/clear-requests', clearTableRequests);
+
+// ── Feedback & Complaints (restaurant → MenuBaran platform) ──────────────────
+router.get('/admin/feedback', getAllFeedback);
+router.get('/admin/complaints', getAllComplaints);
+router.patch('/admin/complaints/:_id/resolve', resolveComplaint);
+router.patch('/admin/complaints/:_id/progress', markComplaintInProgress);
 
 export default router;

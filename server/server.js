@@ -7,6 +7,7 @@ import { Server as SocketIO } from 'socket.io';
 import mongoose from 'mongoose';
 import routes from './routes/index.js';
 import { runSeed } from './scripts/seed.js';
+import { runSeedFeedbackComplaints } from './scripts/seedFeedbackComplaints.js';
 import dotenv from 'dotenv';
 import TableRequest from './models/TableRequest.js';
 import path from 'path';
@@ -179,6 +180,7 @@ mongoose
   .then(async () => {
     console.log('[DB] Connected to MongoDB');
     await runSeed();
+    await runSeedFeedbackComplaints();
     server.listen(PORT, () => {
       console.log(`[Server] Running on http://localhost:${PORT}`);
       

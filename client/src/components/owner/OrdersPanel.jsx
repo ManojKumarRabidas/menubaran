@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { updateOrderStatus } from '../../services/api.js';
+import React, { useState, useMemo, Fragment } from 'react';
+import { updateOrderStatus, processPayment } from '../../services/api.js';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
@@ -13,7 +13,7 @@ const PAY_CONFIG = {
   paid: { status: "Paid", color: 'bg-emerald-100 text-emerald-700', icon: '✓' },
   unpaid: { status: "Unpaid", color: 'bg-red-100 text-red-600', icon: '!' },
 };
-const ORDER_STATUSES = ['pending', 'cooking', 'ready', 'served', 'paid'];
+const ORDER_STATUSES = ['pending', 'cooking', 'ready', 'served', 'cancelled'];
 
 /** Returns "YYYY-MM-DD" for a given Date object (local time) */
 const toDateValue = (date) => {
@@ -122,7 +122,7 @@ export const OrdersPanel = ({ orders = [], onToast, onOrdersChange }) => {
       onOrdersChange(prev =>
         prev.map(o =>
           o._id === order._id
-            ? { ...o, status, paymentStatus: status === 'paid' ? 'paid' : o.paymentStatus }
+            ? { ...o, status }
             : o
         )
       );
@@ -134,10 +134,10 @@ export const OrdersPanel = ({ orders = [], onToast, onOrdersChange }) => {
 
   const markPaid = async (order) => {
     try {
-      await updateOrderStatus(order._id, 'paid');
+      await processPayment(order._id, 'cash', 0);
       onOrdersChange(prev =>
         prev.map(o =>
-          o._id === order._id ? { ...o, status: 'paid', paymentStatus: 'paid' } : o
+          o._id === order._id ? { ...o, paymentStatus: 'paid', paymentMethod: 'cash', tipAmount: 0 } : o
         )
       );
       onToast?.('Order marked as paid', 'success');
@@ -226,28 +226,39 @@ export const OrdersPanel = ({ orders = [], onToast, onOrdersChange }) => {
                 const sc = STATUS_CONFIG[order.status] || STATUS_CONFIG.served;
                 const pc = PAY_CONFIG[order.paymentStatus] || PAY_CONFIG.unpaid;
                 return (
-                  <tr key={order._id} className="hover:bg-gray-50/50 transition cursor-pointer" onClick={() => setExpandedId(isExpanded ? null : order._id)}>
-                    <td className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase">{new Date(order.createdAt).toLocaleString()}</td>
-                    <td className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase">{order._id.substring(0, 8)}</td>
-                    <td className="px-6 py-4 text-sm font-black text-gray-900 border-l-2 border-indigo-500/10">T{order.tableNumber}</td>
-                    <td className="px-6 py-4 text-xs font-bold text-gray-500">{order.items.length} dishes</td>
-                    <td className="px-6 py-4 text-sm font-black text-indigo-600">₹{order.totalAmount.toFixed(2)}</td>
-                    <td className="px-6 py-4">
-                      <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-lg ${sc.color}`}>{sc.label}</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-lg ${pc.color}`}>{pc.icon} {pc.status}</span>
-                    </td>
-                    <td className="px-6 py-4" onClick={e => e.stopPropagation()}>
-                       <div className="flex gap-1.5">
-                        {order.status === 'pending' && <button onClick={() => changeStatus(order, 'cooking')} className="px-2 py-1 bg-blue-100 text-blue-700 rounded-lg text-[10px] font-black uppercase hover:bg-blue-200">Cook</button>}
-                        {order.status === 'cooking' && <button onClick={() => changeStatus(order, 'ready')} className="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-[10px] font-black uppercase hover:bg-emerald-200">Ready</button>}
-                        {order.status === 'ready' && <button onClick={() => changeStatus(order, 'served')} className="px-2 py-1 bg-gray-100 text-gray-700 rounded-lg text-[10px] font-black uppercase hover:bg-gray-200">Serve</button>}
-                        {order.status !== 'paid' && order.paymentStatus !== 'paid' && <button onClick={() => markPaid(order)} className="px-2 py-1 bg-indigo-600 text-white rounded-lg text-[10px] font-black uppercase hover:bg-indigo-700 transition-colors">Paid</button>}
-                        <button className="text-gray-300 ml-1">{isExpanded ? '▲' : '▼'}</button>
-                      </div>
-                    </td>
-                  </tr>
+                  <Fragment key={order._id}>
+                    <tr className={`hover:bg-gray-50/50 transition cursor-pointer ${isExpanded ? 'bg-gray-50/50' : ''}`} onClick={() => setExpandedId(isExpanded ? null : order._id)}>
+                      <td className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase">{new Date(order.createdAt).toLocaleString()}</td>
+                      <td className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase">{order._id.substring(0, 8)}</td>
+                      <td className="px-6 py-4 text-sm font-black text-gray-900 border-l-2 border-indigo-500/10">T{order.tableNumber}</td>
+                      <td className="px-6 py-4 text-xs font-bold text-gray-500">{order.items.length} dishes</td>
+                      <td className="px-6 py-4 text-sm font-black text-indigo-600">₹{order.totalAmount.toFixed(2)}</td>
+                      <td className="px-6 py-4">
+                        <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-lg ${sc.color}`}>{sc.label}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-lg ${pc.color}`}>{pc.icon} {pc.status}</span>
+                      </td>
+                      <td className="px-6 py-4" onClick={e => e.stopPropagation()}>
+                         <div className="flex gap-1.5">
+                          {order.status === 'pending' && <button onClick={() => changeStatus(order, 'cooking')} className="px-2 py-1 bg-blue-100 text-blue-700 rounded-lg text-[10px] font-black uppercase hover:bg-blue-200">Cook</button>}
+                          {order.status === 'cooking' && <button onClick={() => changeStatus(order, 'ready')} className="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-[10px] font-black uppercase hover:bg-emerald-200">Ready</button>}
+                          {order.status === 'ready' && <button onClick={() => changeStatus(order, 'served')} className="px-2 py-1 bg-gray-100 text-gray-700 rounded-lg text-[10px] font-black uppercase hover:bg-gray-200">Serve</button>}
+                          {order.paymentStatus !== 'paid' && <button onClick={() => markPaid(order)} className="px-2 py-1 bg-indigo-600 text-white rounded-lg text-[10px] font-black uppercase hover:bg-indigo-700 transition-colors">Paid</button>}
+                          <button className="text-gray-300 ml-1">{isExpanded ? '▲' : '▼'}</button>
+                        </div>
+                      </td>
+                    </tr>
+                    {isExpanded && (
+                      <tr>
+                        <td colSpan="8" className="p-0 border-b border-gray-100">
+                          <div className="bg-gray-50/50 p-6 shadow-inner border-l-4 border-indigo-500">
+                            <OrderExpansionContent order={order} />
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
                 );
               })}
             </tbody>
@@ -291,7 +302,7 @@ export const OrdersPanel = ({ orders = [], onToast, onOrdersChange }) => {
                        {order.status === 'pending' && <button onClick={() => changeStatus(order, 'cooking')} className="flex-1 py-3 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all">Cook</button>}
                        {order.status === 'cooking' && <button onClick={() => changeStatus(order, 'ready')} className="flex-1 py-3 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all">Ready</button>}
                        {order.status === 'ready' && <button onClick={() => changeStatus(order, 'served')} className="flex-1 py-3 bg-gray-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all">Serve</button>}
-                       {order.status !== 'paid' && order.paymentStatus !== 'paid' && <button onClick={() => markPaid(order)} className="flex-1 py-3 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all">✓ Paid</button>}
+                       {order.paymentStatus !== 'paid' && <button onClick={() => markPaid(order)} className="flex-1 py-3 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all">✓ Paid</button>}
                     </div>
                   </div>
                 )}

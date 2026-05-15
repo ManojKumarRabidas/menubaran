@@ -17,8 +17,8 @@ export const PaymentDesk = ({ orders = [], onToast, onOrdersChange }) => {
   const [processing, setProcessing] = useState(false);
   const [receipt, setReceipt] = useState(null);
 
-  const unpaidOrders = orders.filter(o => o.paymentStatus !== 'paid' && o.status !== 'paid');
-  const paidOrders = orders.filter(o => o.paymentStatus === 'paid' || o.status === 'paid');
+  const unpaidOrders = orders.filter(o => o.paymentStatus !== 'paid' && o.status !== 'cancelled');
+  const paidOrders = orders.filter(o => o.paymentStatus === 'paid');
 
   const openPayment = (order) => {
     setSelectedOrder(order);
@@ -36,7 +36,7 @@ export const PaymentDesk = ({ orders = [], onToast, onOrdersChange }) => {
     const totalWithTip = selectedOrder.totalAmount + tipAmt;
     setReceipt({ order: selectedOrder, method, tip: tipAmt, total: totalWithTip });
     onOrdersChange(prev => prev.map(o => o._id === selectedOrder._id
-      ? { ...o, paymentStatus: 'paid', paymentMethod: method, tipAmount: tipAmt, status: 'paid' }
+      ? { ...o, paymentStatus: 'paid', paymentMethod: method, tipAmount: tipAmt }
       : o
     ));
     onToast?.('Payment processed successfully! 🎉', 'success');

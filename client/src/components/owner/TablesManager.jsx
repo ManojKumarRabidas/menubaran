@@ -22,7 +22,7 @@ export const TablesManager = ({ tables = [], orders = [], requests = [], restaur
   const [addingTable, setAddingTable] = useState(false);
   const [newTableNumber, setNewTableNumber] = useState('');
 
-  const getOrderForTable = (tableId) => orders.find(o => o.tableId === tableId && o.status !== 'paid');
+  const getOrderForTable = (tableId) => orders.find(o => o.tableId === tableId && o.status !== 'cancelled' && !(o.status === 'served' && o.paymentStatus === 'paid'));
 
   const startEdit = (table) => { setEditingId(table._id); setEditNumber(String(table.number)); };
   const cancelEdit = () => { setEditingId(null); setEditNumber(''); };

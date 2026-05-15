@@ -33,6 +33,18 @@ export const getRestaurantById = async (_id) => {
   }
 };
 
+export const updateRestaurant = async (_id, data) => {
+  try {
+    const res = await api(`/api/restaurants/${_id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+    return { data: res.success ? res.doc : null, error: res.error };
+  } catch (err) {
+    return { data: null, error: err.message };
+  }
+};
+
 // ── Menu ──────────────────────────────────────────────────────────────────────
 
 export const getMenuByRestaurantId = async (restaurantId) => {
@@ -86,9 +98,9 @@ export const bulkUploadMenuItems = async (restaurantId, items) => {
       method: 'POST',
       body: JSON.stringify({ restaurantId, items }),
     });
-    return { data: res.success ? res.docs : [], success: res.success, error: res.error };
+    return { data: res.success ? res.docs : [], newCategories: res.success ? res.newCategories : [], success: res.success, error: res.error };
   } catch (error) {
-    return { data: [], success: false, error: error.message };
+    return { data: [], newCategories: [], success: false, error: error.message };
   }
 };
 
@@ -115,6 +127,18 @@ export const getCategoriesByRestaurant = async (restaurantId) => {
     return { data: res.success ? res.docs : [] };
   } catch {
     return { data: [] };
+  }
+};
+
+export const createCategory = async (restaurantId, name, icon) => {
+  try {
+    const res = await api(`/api/categories`, {
+      method: 'POST',
+      body: JSON.stringify({ restaurantId, name, icon }),
+    });
+    return { data: res.success ? res.doc : null, isNew: res.isNew };
+  } catch {
+    return { data: null };
   }
 };
 
@@ -354,8 +378,8 @@ export const staffLogin = async (email, password) => {
     method: 'POST',
     body: JSON.stringify({ email, password }),
   });
-
-  if (!res.success) return Promise.reject({ error: 'Invalid credentials' });
+  console.log("api ", res)
+  if (!res.success) return Promise.reject({ error: res.error });
 
   const { staff } = res.doc;
   const payload = {

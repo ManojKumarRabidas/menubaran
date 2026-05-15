@@ -43,7 +43,10 @@ export const getOrdersByTable = async (req, res) => {
     try {
         const docs = await Order.find({
             tableId: req.params.tableId,
-            status: { $nin: ['cancelled', 'paid'] },
+            $or: [
+                { status: { $nin: ['served', 'cancelled'] } },
+                { status: 'served', paymentStatus: { $ne: 'paid' } }
+            ]
         }).sort({ createdAt: -1 });
         return res.json({ success: true, docs });
     } catch (e) {
@@ -55,7 +58,10 @@ export const getCurrentOrdersByTable = async (req, res) => {
     try {
         const docs = await Order.find({
             tableId: req.params.tableId,
-            status: { $nin: ['cancelled', 'paid'] },
+            $or: [
+                { status: { $nin: ['served', 'cancelled'] } },
+                { status: 'served', paymentStatus: { $ne: 'paid' } }
+            ]
         }).sort({ createdAt: -1 });
         return res.json({ success: true, docs });
     } catch (e) {
@@ -111,6 +117,14 @@ export const updateOrderStatus = async (req, res) => {
         );
         if (!doc) return res.status(404).json({ success: false, error: 'Order not found' });
 
+        // Free up the table if cancelled, or if served and already paid
+        if (status === 'cancelled' || (status === 'served' && doc.paymentStatus === 'paid')) {
+            await Table.findByIdAndUpdate(doc.tableId, {
+                status: 'available',
+                currentOrderId: null,
+            });
+        }
+
         // Broadcast to all connected clients so customer sees live update
         io.emit('order:statusUpdate', {
             orderId: doc._id,
@@ -133,22 +147,22 @@ export const processPayment = async (req, res) => {
         const doc = await Order.findByIdAndUpdate(
             req.params._id,
             {
-                status: 'paid',
                 paymentStatus: 'paid',
                 paymentMethod: method,
                 tipAmount: parseFloat(tip),
                 paidAt: new Date(),
-                $push: { statusHistory: { status: 'paid', timestamp: new Date() } },
             },
             { new: true }
         );
         if (!doc) return res.status(404).json({ success: false, error: 'Order not found' });
 
-        // Free up the table
-        await Table.findByIdAndUpdate(doc.tableId, {
-            status: 'available',
-            currentOrderId: null,
-        });
+        // Free up the table only if food is already served
+        if (doc.status === 'served') {
+            await Table.findByIdAndUpdate(doc.tableId, {
+                status: 'available',
+                currentOrderId: null,
+            });
+        }
 
         return res.json({ success: true, doc });
     } catch (e) {

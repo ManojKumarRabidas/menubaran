@@ -6,6 +6,7 @@ const staffSchema = new mongoose.Schema(
         restaurantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Restaurant', required: true, index: true },
         name: { type: String, required: true, trim: true },
         email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+        mobileNumber: { type: String, trim: true },
         password: { type: String, required: true },
         role: { type: String, enum: ['owner', 'manager', 'waiter', 'cook'], required: true },
         avatarColor: { type: String },

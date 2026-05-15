@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import * as XLSX from 'xlsx';
-import { updateMenuItem, addMenuItem, bulkUploadMenuItems } from '../../services/api.js';
+import { updateMenuItem, addMenuItem, bulkUploadMenuItems, createCategory } from '../../services/api.js';
 
 const EMOJIS = ['🍕', '🍔', '🌮', '🍜', '🍣', '🥗', '🍗', '🥩', '🍝', '🥘', '🫕', '🍛', '🍞', '🥐', '🧆', '🍱', '🥟', '🍢', '🫔', '🧇', '🍦', '🧁', '🍩', '🥤', '☕', '🍵', '🧃', '🫖', '🍺', '🥂'];
 
@@ -11,10 +11,21 @@ const STATUS_COLORS = {
 
 const BLANK_NEW = { name: '', price: '', emoji: '🍽️', categoryId: '', description: '', isAvailable: true };
 
+/* ── Shared emoji picker render ── */
+const EmojiGrid = ({ onSelect }) => (
+  <div className="flex flex-wrap gap-1 mt-2 bg-gray-50 rounded-xl p-2 max-h-28 overflow-y-auto">
+    {EMOJIS.map(e => (
+      <button key={e} type="button" onClick={() => onSelect(e)} className="text-2xl hover:scale-125 transition">{e}</button>
+    ))}
+  </div>
+);
+
+
+
 /**
  * Full Menu Editor component — add, edit name/price/category/image/availability. Bulk price update.
  */
-export const MenuEditor = ({ items = [], categories = [], restaurantId, onToast, onItemsChange }) => {
+export const MenuEditor = ({ items = [], categories = [], restaurantId, onToast, onItemsChange, onCategoriesChange }) => {
   const [activeCat, setActiveCat] = useState('all');
   const [editingId, setEditingId] = useState(null);
   const [editDraft, setEditDraft] = useState({});
@@ -39,17 +50,35 @@ export const MenuEditor = ({ items = [], categories = [], restaurantId, onToast,
   const openAdd = () => { setNewItem(BLANK_NEW); setShowAddModal(true); setAddEmojiOpen(false); };
   const closeAdd = () => { setShowAddModal(false); setNewItem(BLANK_NEW); setAddEmojiOpen(false); };
 
+  const resolveCategory = async (catNameOrId) => {
+    if (!catNameOrId?.trim()) return null;
+    const trimmed = catNameOrId.trim();
+    const existing = categories.find(c => c._id === trimmed || c.name.toLowerCase() === trimmed.toLowerCase());
+    if (existing) return existing._id;
+
+    const res = await createCategory(restaurantId, trimmed, '📁');
+    console.log("res", res)
+    if (res.data) {
+      if (onCategoriesChange) onCategoriesChange(prev => [...prev, res.data]);
+      return res.data._id;
+    }
+    return null;
+  };
+
   const saveNewItem = async () => {
     const name = newItem.name?.trim();
     const price = parseFloat(newItem.price);
     if (!name) { onToast?.('Please enter item name', 'error'); return; }
     if (isNaN(price) || price <= 0) { onToast?.('Please enter a valid price', 'error'); return; }
-    if (!newItem.categoryId) { onToast?.('Please select a category', 'error'); return; }
+
     setSaving(true);
+    const catId = await resolveCategory(newItem.categoryId);
+    if (!catId) { onToast?.('Please enter or select a category', 'error'); setSaving(false); return; }
+
     try {
       const { data } = await addMenuItem({
         restaurantId,
-        categoryId: newItem.categoryId,
+        categoryId: catId,
         name,
         price,
         emoji: newItem.emoji,
@@ -85,15 +114,19 @@ export const MenuEditor = ({ items = [], categories = [], restaurantId, onToast,
     if (!name || isNaN(price) || price <= 0) {
       onToast?.('Please enter valid name and price', 'error'); return;
     }
+
+    const catId = await resolveCategory(editDraft.categoryId);
+    if (!catId) { onToast?.('Please enter or select a category', 'error'); return; }
+
     await updateMenuItem(item._id, {
       name, price,
       emoji: editDraft.emoji,
-      categoryId: editDraft.categoryId,
+      categoryId: catId,
       isAvailable: editDraft.isAvailable,
     });
     onItemsChange(prev => prev.map(i =>
       i._id === item._id
-        ? { ...i, name, price, emoji: editDraft.emoji, categoryId: editDraft.categoryId, isAvailable: editDraft.isAvailable }
+        ? { ...i, name, price, emoji: editDraft.emoji, categoryId: catId, isAvailable: editDraft.isAvailable }
         : i
     ));
     onToast?.('Item updated!', 'success');
@@ -189,8 +222,10 @@ export const MenuEditor = ({ items = [], categories = [], restaurantId, onToast,
         const res = await bulkUploadMenuItems(restaurantId, items);
         if (res.success) {
           onToast?.(`Succesfully uploaded ${res.count} items!`, 'success');
-          onItemsChange(prev => [...prev, ...res.docs]);
-          setTimeout(() => window.location.reload(), 1500); 
+          onItemsChange(prev => [...prev, ...res.data]);
+          if (res.newCategories && res.newCategories.length > 0 && onCategoriesChange) {
+            onCategoriesChange(prev => [...prev, ...res.newCategories]);
+          }
         } else {
           onToast?.(res.error || 'Failed to upload items', 'error');
         }
@@ -204,32 +239,6 @@ export const MenuEditor = ({ items = [], categories = [], restaurantId, onToast,
     };
     reader.readAsBinaryString(file);
   };
-
-  /* ── Shared emoji picker render ── */
-  const EmojiGrid = ({ onSelect }) => (
-    <div className="flex flex-wrap gap-1 mt-2 bg-gray-50 rounded-xl p-2 max-h-28 overflow-y-auto">
-      {EMOJIS.map(e => (
-        <button key={e} type="button" onClick={() => onSelect(e)} className="text-2xl hover:scale-125 transition">{e}</button>
-      ))}
-    </div>
-  );
-
-  /* ── Category select component ── */
-  const CategorySelect = ({ value, onChange, required }) => (
-    <div>
-      <label className="text-xs font-semibold text-gray-500 mb-1 block">Category{required && <span className="text-red-400 ml-0.5">*</span>}</label>
-      <select
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        className="w-full px-3 py-1.5 border border-indigo-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
-      >
-        <option value="">— Select category —</option>
-        {categories.map(cat => (
-          <option key={cat._id} value={cat._id}>{cat.icon} {cat.name}</option>
-        ))}
-      </select>
-    </div>
-  );
 
   return (
     <div className="space-y-4">
@@ -284,6 +293,13 @@ export const MenuEditor = ({ items = [], categories = [], restaurantId, onToast,
 
           {/* Excel Actions */}
           <div className="flex items-center gap-2">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleExcelUpload}
+              accept=".xlsx,.xls"
+              className="hidden"
+            />
             <button
               onClick={downloadSampleExcel}
               className="flex-1 sm:flex-none px-4 py-2 bg-gray-50 text-gray-500 rounded-xl text-[10px] font-black uppercase border border-gray-100 hover:bg-gray-100 transition"
@@ -385,10 +401,21 @@ export const MenuEditor = ({ items = [], categories = [], restaurantId, onToast,
                       </div>
                     </div>
 
-                    <CategorySelect
-                      value={editDraft.categoryId}
-                      onChange={v => setEditDraft(d => ({ ...d, categoryId: v }))}
-                    />
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 mb-1 block">Category</label>
+                      <input
+                        list={`cat-list-edit-${item._id}`}
+                        value={categories.find(c => c._id === editDraft.categoryId)?.name || editDraft.categoryId || ''}
+                        onChange={e => setEditDraft(d => ({ ...d, categoryId: e.target.value }))}
+                        placeholder="Select or type new category..."
+                        className="w-full px-3 py-1.5 border border-indigo-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
+                      />
+                      <datalist id={`cat-list-edit-${item._id}`}>
+                        {categories.map(cat => (
+                          <option key={cat._id} value={cat.name} />
+                        ))}
+                      </datalist>
+                    </div>
 
                     <div className="flex items-center gap-2">
                       <label className="text-xs font-semibold text-gray-500">Available</label>
@@ -495,11 +522,21 @@ export const MenuEditor = ({ items = [], categories = [], restaurantId, onToast,
               </div>
 
               {/* Category */}
-              <CategorySelect
-                value={newItem.categoryId}
-                onChange={v => setNewItem(n => ({ ...n, categoryId: v }))}
-                required
-              />
+              <div>
+                <label className="text-xs font-semibold text-gray-500 mb-1 block">Category <span className="text-red-400">*</span></label>
+                <input
+                  list="cat-list-add"
+                  value={categories.find(c => c._id === newItem.categoryId)?.name || newItem.categoryId || ''}
+                  onChange={e => setNewItem(n => ({ ...n, categoryId: e.target.value }))}
+                  placeholder="Select or type new category..."
+                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all"
+                />
+                <datalist id="cat-list-add">
+                  {categories.map(cat => (
+                    <option key={cat._id} value={cat.name} />
+                  ))}
+                </datalist>
+              </div>
 
               {/* Description */}
               <div>

@@ -34,6 +34,15 @@ const orderSchema = new mongoose.Schema(
         statusHistory: [statusHistorySchema],
         specialInstructions: { type: String, default: '' },
         totalAmount: { type: Number, required: true },
+        paymentStatus: {
+            type: String,
+            enum: ['pending', 'paid', 'failed'],
+            default: 'pending',
+            index: true,
+        },
+        paymentMethod: { type: String },
+        tipAmount: { type: Number, default: 0 },
+        paidAt: { type: Date },
     },
     { timestamps: true }
 );

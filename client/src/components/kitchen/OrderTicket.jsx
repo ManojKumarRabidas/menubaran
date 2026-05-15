@@ -25,12 +25,6 @@ const STATUS_CONFIG = {
     label: '✓ Served',
     timer: false,
   },
-  paid: {
-    border: 'border-gray-200',
-    badge: 'bg-gray-100 text-gray-500',
-    label: '✓ Paid',
-    timer: false,
-  },
 };
 
 export const OrderTicket = ({ order, onStartCooking, onMarkReady }) => {
@@ -148,7 +142,7 @@ export const OrderTicket = ({ order, onStartCooking, onMarkReady }) => {
           ✓ Mark Ready
         </button>
       )}
-      {['ready', 'served', 'paid'].includes(order.status) && (
+      {['ready', 'served'].includes(order.status) && (
         <div className={`w-full text-center font-bold py-2.5 rounded-xl text-sm ${cfg.badge}`}>
           {cfg.label}
         </div>

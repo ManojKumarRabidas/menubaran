@@ -208,7 +208,11 @@ export default function WaiterFloorPage() {
   };
 
   const getOrdersForTable = (tableId) => {
-    return orders.filter(o => o.tableId === tableId && !['cancelled', 'paid'].includes(o.status));
+    return orders.filter(o => 
+      o.tableId === tableId && 
+      o.status !== 'cancelled' && 
+      !(o.status === 'served' && o.paymentStatus === 'paid')
+    );
   };
 
   const changeStatus = async (currentOrderId, status) => {
@@ -217,7 +221,7 @@ export default function WaiterFloorPage() {
       setOrders(prev =>
         prev.map(o =>
           o._id === currentOrderId
-            ? { ...o, status, paymentStatus: status === 'paid' ? 'paid' : o.paymentStatus }
+            ? { ...o, status }
             : o
         )
       );

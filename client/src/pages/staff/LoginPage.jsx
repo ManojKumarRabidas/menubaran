@@ -25,7 +25,7 @@ export default function LoginPage({ isAdmin = false }) {
         ? await adminLogin(email, password)        // your admin API
         : await staffLogin(email, password);
       const success = login(response.data.token);
-
+      console.log("success", success)
       if (success) {
         // Redirect based on role
         const route = isAdmin
@@ -33,10 +33,11 @@ export default function LoginPage({ isAdmin = false }) {
           : ({ cook: '/kitchen', waiter: '/floor', owner: '/dashboard' }[response.data.staff.role] || '/');
         navigate(route);
       } else {
-        setError('Invalid credentials');
+        setError(response.error);
       }
     } catch (err) {
-      setError('Invalid credentials');
+      console.log("errr", err)
+      setError(err.error);
     } finally {
       setLoading(false);
     }

@@ -13,7 +13,9 @@ import TableRequest from './models/TableRequest.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-dotenv.config();
+// Load the correct .env file based on NODE_ENV
+const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env';
+dotenv.config({ path: envFile });
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -78,7 +80,13 @@ app.use('/api', rateLimit({
 
 // ── Middleware ────────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '10kb' }));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Serve local uploads as static files in development only.
+// In production, files are hosted on Cloudinary — no local static route needed.
+if (process.env.NODE_ENV !== 'production') {
+  app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+  console.log('[Static] Serving /uploads from local disk (development mode)');
+}
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.get('/', (req, res) => res.send('API is running'));

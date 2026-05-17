@@ -17,7 +17,7 @@ import {
   getAdminStats,
   updateRestaurant
 } from '../controllers/restaurantController.js';
-import upload from '../middleware/uploadMiddleware.js';
+import { getUploader } from '../config/upload.js';
 import {
   getMenuByRestaurantId,
   getMenuBySlug,
@@ -65,7 +65,7 @@ router.patch('/staff/:_id/toggle', toggleStaffStatus);
 router.patch('/staff/:_id', updateStaff);
 router.delete('/staff/:_id', deleteStaff);
 
-router.post('/restaurants/register', upload.fields([
+router.post('/restaurants/register', getUploader('restaurants').fields([
   { name: 'registrationDocument', maxCount: 1 },
   { name: 'fssaiCertificate', maxCount: 1 },
   { name: 'panCard', maxCount: 1 },

@@ -1,19 +1,17 @@
-import multer from 'multer';
-import path from 'path';
+/**
+ * middleware/uploadMiddleware.js
+ * ──────────────────────────────
+ * Backwards-compatible re-export.
+ * Delegates to config/upload.js which switches between local diskStorage
+ * (development) and Cloudinary (production) based on NODE_ENV.
+ *
+ * Existing imports of this file (e.g. in routes/index.js) continue to work
+ * without modification.
+ */
+import { getUploader } from '../config/upload.js';
 
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'uploads/');
-    },
-    filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-    }
-});
-
-const upload = multer({ 
-    storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
-});
+// Default uploader writes to uploads/restaurants/ (the primary use-case).
+// Routes that need a different subfolder should import getUploader directly.
+const upload = getUploader('restaurants');
 
 export default upload;
